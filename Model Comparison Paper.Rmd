@@ -1,0 +1,84 @@
+---
+title             : "The Exponential Model's New Clothes"
+shorttitle        : "Exponential Model"
+
+author: 
+  - name          : "Shawn Gilroy"
+    affiliation   : "1"
+    corresponding : yes    # Define only one corresponding author
+    address       : "226 Audubon Hall Baton Rouge, Louisiana 70806"
+    email         : "sgilroy1@lsu.edu"
+    role:         
+      - Conceptualization
+      - Writing - Original Draft Preparation
+      - Writing - Review & Editing
+
+affiliation:
+  - id            : "1"
+    institution   : "Louisiana State University"
+
+authornote: |
+  Shawn Gilroy. Louisiana State University. Correspondence should be directed to sgilroy1@lsu.edu
+
+abstract: |
+  Operant translations of Behavioral Economic concepts and principles have successfully enhanced the ability to predict and characterize individual choice. Specifically, Behavioral Economic models of choices (e.g., demand) have been particularly useful in evaluating how decision-makers arrives at choices under constraint (e.g., limited price, resources). With respect to operant demand, the prevailing approach in the Behavior Analytic literature draws from the framework of Hursh & Silberburg (2008). Although few would argue the merits of this framework, debate continues with regard to how to address limitations of the logarithmic scale. Specifically, there are opposing opinions regarding the handling of zero values and which restatement of Hursh & Silberburg (2008) fares best under certain situations. The purpose of this technical report is to review the limited ways in which the original and exponentiated forms differ and how slight manipulations in the application of each lead to equivalent results.
+
+keywords          : "behavioral economics, operant demand, consumption, zero asymptotes"
+wordcount         : "X"
+
+bibliography      : ["r-references.bib"]
+
+floatsintext      : no
+figurelist        : no
+tablelist         : no
+footnotelist      : no
+linenumbers       : yes
+mask              : no
+draft             : no
+
+documentclass     : "apa7"
+classoption       : "man"
+output            : papaja::apa6_pdf
+---
+
+```{r setup, include = FALSE}
+library("papaja")
+r_refs("r-references.bib")
+```
+
+```{r analysis-preferences}
+# Seed for random number generation
+set.seed(42)
+knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
+```
+
+
+
+# Methods
+We report how we determined our sample size, all data exclusions (if any), all manipulations, and all measures in the study. <!-- 21-word solution (Simmons, Nelson & Simonsohn, 2012; retrieved from http://ssrn.com/abstract=2160588) -->
+
+## Participants
+
+## Material
+
+## Procedure
+
+## Data analysis
+We used `r cite_r("r-references.bib")` for all our analyses.
+
+
+# Results
+
+# Discussion
+
+
+\newpage
+
+# References
+
+\begingroup
+\setlength{\parindent}{-0.5in}
+\setlength{\leftskip}{0.5in}
+
+<div id="refs" custom-style="Bibliography"></div>
+\endgroup
