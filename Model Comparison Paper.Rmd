@@ -29,20 +29,30 @@ wordcount         : "X"
 bibliography      : ["r-references.bib"]
 
 floatsintext      : no
-figurelist        : no
-tablelist         : no
+figurelist        : yes
+tablelist         : yes
 footnotelist      : no
 linenumbers       : yes
 mask              : no
-draft             : no
+draft             : yes
 
+csl               : "apa.csl"
 documentclass     : "apa7"
 classoption       : "man"
 output            : papaja::apa6_pdf
 ---
 
+\raggedbottom
+
 ```{r setup, include = FALSE}
+
+library(kableExtra)
+library(knitr)
+library(ggplot2)
+library(gridExtra)
 library("papaja")
+library(tidyverse)
+
 r_refs("r-references.bib")
 ```
 
@@ -52,25 +62,382 @@ set.seed(42)
 knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
 ```
 
+# Introduction
 
+Contemporary methods for evaluating the consumption of goods and services in an operant framework draw heavily from the methodology proposed in @hursh2008economic.
+
+## Zero and Non-Zero Asymptotes
+
+...
+
+```{r empirical data}
+
+# , fig.cap="Span of Demand Curve in Log Units (k)"
+
+preFit <- data.frame(
+  P = c(0.1, 1,  2,  5,  10, 50, 100, 500, 1000, 5000),
+  Q = c(99.54077086,
+        95.52117752,
+        91.28456421,
+        79.88382452,
+        64.51709973,
+        16.3328254,
+        5.442004322,
+        0,
+        0,
+        0)
+)
+
+kSet = log10(max(preFit$Q)) - log10(min(preFit$Q[preFit$Q>0]))
+
+lowerAsymptote = 10^(log10(100) - kSet)
+
+ggplot(preFit, aes(P, Q)) +
+  ggtitle("Demand Data with Zeroes") +
+  geom_point() +
+  annotate("segment", 
+           x      = 0.1, 
+           xend   = 0.1, 
+           y      = 100, 
+           yend   = lowerAsymptote,
+           colour = "red") +
+  annotate("text", 
+           x     = 0.125, 
+           y     = 55, 
+           angle = 90,
+           adj   = 0.5,
+           col   = "red",
+           label = "Range of Non-zero Observed Consumption") +
+  scale_x_log10(breaks = preFit$P,
+                labels = preFit$P) +
+  theme_bw()
+
+```
+
+## Scale Differences
+
+...
+
+## Interchangeability of Scales
+
+
+### Fitting Non-zero Data
+
+```{r nonZeroFits}
+
+preFit.trim = preFit[preFit$Q>0, ]
+
+kSet = log10(max(preFit$Q)) - log10(min(preFit$Q[preFit$Q>0]))
+
+EXPT = nls(Q ~ Q0 * 10^(kSet*(exp(-a * 100 * P)-1)),
+           data = preFit.trim,
+           start = c(a  = 0.0001,
+                     Q0 = 100),
+           lower = c(a = -Inf,
+                     Q0 = 1),
+           upper = c(a = Inf,
+                     Q0 = 100),
+           algorithm = "port",
+           control = list(
+             maxiter = 1000,
+             warnOnly = FALSE
+           ))
+
+preFit.trim$exptPred = predict(EXPT)
+
+EXPL = nls(log(Q)/log(10) ~ log(Q0)/log(10) + kSet*(exp(-a * 100 * P)-1),
+           data = preFit.trim,
+           start = c(a  = 0.0001,
+                     Q0 = 100),
+           lower = c(a = -Inf,
+                     Q0 = 1),
+           upper = c(a = Inf,
+                     Q0 = 100),
+           algorithm = "port",
+           control = list(
+             maxiter = 1000,
+             warnOnly = FALSE
+           ))
+
+preFit.trim$explPred = 10^predict(EXPL)
+
+preFit.trim = preFit.trim %>%
+  rename(`Exponential`   = explPred,
+         `Exponentiated` = exptPred) 
+
+# kable(preFit.trim) %>%
+#   kable_styling(full_width = TRUE)
+
+preFit.trim = preFit.trim %>%
+  gather(Model, Prediction, -Q, -P) 
+
+ggplot(preFit.trim, aes(P, Q, color = Model)) +
+  geom_point() +
+  geom_line(aes(P, Prediction)) +
+  facet_wrap(~Model, ncol = 2) +
+  theme_bw() +
+  theme(legend.position = "bottom")
+
+```
+
+### Fitting Zero Data
+
+```{r zeroFitsRaw}
+
+kSet = log10(max(preFit$Q)) - 
+       log10(min(preFit$Q[preFit$Q>0]))
+
+lowerAsymptote = 10^(log10(max(preFit$Q)) - kSet)
+
+preFit.trim = preFit[preFit$Q>0, ]
+
+newData = data.frame(
+  P = seq(0.1, 5000, length.out = 5000),
+  Q = 0
+)
+
+newData$pred = predict(EXPT, newdata = newData)
+
+ggplot(preFit, aes(P, Q)) +
+  ggtitle("Demand Data without Zeroes (EXPT; k = Observed Span)") +
+  geom_point() +
+  geom_line(data = newData, aes(P, pred), col = "blue") +
+  annotate("segment",
+           x      = 0.1,
+           xend   = 0.1,
+           y      = 100,
+           yend   = lowerAsymptote,
+           colour = "red") +
+  annotate("text", 
+           x     = 0.125,
+           y     = 55,
+           angle = 90,
+           adj   = 0.5,
+           col   = "red",
+           label = "Range of Non-zero Observed Consumption") +
+  annotate("segment", 
+           x      = 0.1, 
+           xend   = 5000, 
+           y      = lowerAsymptote, 
+           yend   = lowerAsymptote,
+           colour = "red",
+           lty    = 2) +
+  scale_x_log10(breaks = preFit$P,
+                labels = preFit$P) +
+  theme_bw() +
+  theme(legend.position = "bottom")
+
+#########
+
+preFit.trim = preFit[preFit$Q>0, ]
+
+kSet = log10(max(preFit$Q)) - log10(min(preFit$Q[preFit$Q>0]))
+
+EXPT = nls(Q ~ Q0 * 10^(kSet*(exp(-a * 100 * P)-1)),
+           data = preFit,
+           start = c(a  = 0.0001,
+                     Q0 = 100),
+           lower = c(a = -Inf,
+                     Q0 = 1),
+           upper = c(a = Inf,
+                     Q0 = 100),
+           algorithm = "port",
+           control = list(
+             maxiter = 1000,
+             warnOnly = FALSE
+           ))
+
+newData = data.frame(
+  P = seq(0.1, 5000, length.out = 5000),
+  Q = 0
+)
+
+newData$pred = predict(EXPT, newdata = newData)
+
+#########
+
+kSet1 = log10(max(preFit$Q)) - log10(min(preFit$Q[preFit$Q>0])) + 0
+kSet2 = log10(max(preFit$Q)) - log10(min(preFit$Q[preFit$Q>0])) + 0.5
+kSet3 = log10(max(preFit$Q)) - log10(min(preFit$Q[preFit$Q>0])) + 1
+kSet4 = log10(max(preFit$Q)) - log10(min(preFit$Q[preFit$Q>0])) + 2
+kSet5 = log10(max(preFit$Q)) - log10(min(preFit$Q[preFit$Q>0])) + 3
+
+EXPT1= nls(Q ~ Q0 * 10^(kSet1*(exp(-a * 100 * P)-1)),
+           data = preFit,
+           start = c(a  = 0.0001,
+                     Q0 = 100),
+           lower = c(a = -Inf,
+                     Q0 = 1),
+           upper = c(a = Inf,
+                     Q0 = 100),
+           algorithm = "port",
+           control = list(
+             maxiter = 1000,
+             warnOnly = FALSE
+           ))
+
+newData1 = data.frame(
+  P = seq(0.1, 5000, length.out = 5000),
+  K = "Observed",
+  Q = 0
+)
+
+newData1$pred = predict(EXPT1, newdata = newData1)
+
+EXPT2= nls(Q ~ Q0 * 10^(kSet2*(exp(-a * 100 * P)-1)),
+           data = preFit,
+           start = c(a  = 0.0001,
+                     Q0 = 100),
+           lower = c(a = -Inf,
+                     Q0 = 1),
+           upper = c(a = Inf,
+                     Q0 = 100),
+           algorithm = "port",
+           control = list(
+             maxiter = 1000,
+             warnOnly = FALSE
+           ))
+
+newData2 = data.frame(
+  P = seq(0.1, 5000, length.out = 5000),
+  K = "Observed + 0.5",
+  Q = 0
+)
+
+newData2$pred = predict(EXPT2, newdata = newData2)
+
+EXPT3= nls(Q ~ Q0 * 10^(kSet3*(exp(-a * 100 * P)-1)),
+           data = preFit,
+           start = c(a  = 0.0001,
+                     Q0 = 100),
+           lower = c(a = -Inf,
+                     Q0 = 1),
+           upper = c(a = Inf,
+                     Q0 = 100),
+           algorithm = "port",
+           control = list(
+             maxiter = 1000,
+             warnOnly = FALSE
+           ))
+
+newData3 = data.frame(
+  P = seq(0.1, 5000, length.out = 5000),
+  K = "Observed + 1",
+  Q = 0
+)
+
+newData3$pred = predict(EXPT3, newdata = newData3)
+
+EXPT4= nls(Q ~ Q0 * 10^(kSet4*(exp(-a * 100 * P)-1)),
+           data = preFit,
+           start = c(a  = 0.0001,
+                     Q0 = 100),
+           lower = c(a = -Inf,
+                     Q0 = 1),
+           upper = c(a = Inf,
+                     Q0 = 100),
+           algorithm = "port",
+           control = list(
+             maxiter = 1000,
+             warnOnly = FALSE
+           ))
+
+newData4 = data.frame(
+  P = seq(0.1, 5000, length.out = 5000),
+  K = "Observed + 2",
+  Q = 0
+)
+
+newData4$pred = predict(EXPT4, newdata = newData4)
+
+EXPT5= nls(Q ~ Q0 * 10^(kSet5*(exp(-a * 100 * P)-1)),
+           data = preFit,
+           start = c(a  = 0.0001,
+                     Q0 = 100),
+           lower = c(a = -Inf,
+                     Q0 = 1),
+           upper = c(a = Inf,
+                     Q0 = 100),
+           algorithm = "port",
+           control = list(
+             maxiter = 1000,
+             warnOnly = TRUE
+           ))
+
+newData5 = data.frame(
+  P = seq(0.1, 5000, length.out = 5000),
+  K = "Observed + 3",
+  Q = 0
+)
+
+newData5$pred = predict(EXPT5, newdata = newData5)
+
+totalNewData = rbind(
+  newData1,
+  newData2,
+  newData3,
+  newData4,
+  newData5
+)
+
+ggplot(preFit, aes(P, Q)) +
+  ggtitle("Demand Data with Zeroes (EXPT; k = Observed Span)") +
+  geom_point() +
+  geom_line(data = totalNewData, aes(P, pred, color = K), inherit.aes = FALSE) +
+  annotate("text",
+           x     = 0.125,
+           y     = 55,
+           angle = 90,
+           adj   = 0.5,
+           col   = "red",
+           label = "Range of Non-zero Observed Consumption") +
+  scale_x_log10(breaks = preFit$P,
+                labels = preFit$P) +
+  theme_bw() +
+  theme(legend.position = "bottom")
+
+```
+
+Asymptote for Observed + 0 = `r 10^(log10(max(preFit$Q)) - (log10(max(preFit$Q)) - log10(min(preFit$Q[preFit$Q>0])) + 0))`
+
+Asymptote for Observed + 0.5 = `r 10^(log10(max(preFit$Q)) - (log10(max(preFit$Q)) - log10(min(preFit$Q[preFit$Q>0])) + 0.5))`
+
+Asymptote for Observed + 1 = `r 10^(log10(max(preFit$Q)) - (log10(max(preFit$Q)) - log10(min(preFit$Q[preFit$Q>0])) + 1))`
+
+Asymptote for Observed + 2 = `r 10^(log10(max(preFit$Q)) - (log10(max(preFit$Q)) - log10(min(preFit$Q[preFit$Q>0])) + 2))`
+
+Asymptote for Observed + 3 = `r 10^(log10(max(preFit$Q)) - (log10(max(preFit$Q)) - log10(min(preFit$Q[preFit$Q>0])) + 3))`
+
+
+\pagebreak
 
 # Methods
-We report how we determined our sample size, all data exclusions (if any), all manipulations, and all measures in the study. <!-- 21-word solution (Simmons, Nelson & Simonsohn, 2012; retrieved from http://ssrn.com/abstract=2160588) -->
 
-## Participants
+...
 
-## Material
+## Simulated Participants
 
-## Procedure
+...
+
+## Materials
+
+...
+
+## Procedures
+
+...
 
 ## Data analysis
-We used `r cite_r("r-references.bib")` for all our analyses.
 
+We used `r cite_r("r-references.bib")` for all our analyses.
 
 # Results
 
+...
+
 # Discussion
 
+...
 
 \newpage
 
