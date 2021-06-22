@@ -28,23 +28,23 @@ wordcount         : "X"
 
 bibliography      : ["r-references.bib"]
 
-floatsintext      : no
+floatsintext      : yes
 figurelist        : yes
 tablelist         : yes
 footnotelist      : no
 linenumbers       : yes
 mask              : no
-draft             : yes
+draft             : no
 
-csl               : "apa.csl"
 documentclass     : "apa7"
+csl               : "apa.csl"
 classoption       : "man"
 output            : papaja::apa6_pdf
 ---
 
 \raggedbottom
 
-```{r setup, include = FALSE}
+```{r include = FALSE}
 
 library(kableExtra)
 library(knitr)
@@ -56,7 +56,7 @@ library(tidyverse)
 r_refs("r-references.bib")
 ```
 
-```{r analysis-preferences}
+```{r }
 # Seed for random number generation
 set.seed(42)
 knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
@@ -64,15 +64,46 @@ knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
 
 # Introduction
 
-Contemporary methods for evaluating the consumption of goods and services in an operant framework draw heavily from the methodology proposed in @hursh2008economic.
+Contemporary methods for evaluating the consumption of goods and services in an operant framework draw heavily from the methodology proposed in @hursh2008economic. This evolving strategy and methodology has taken various forms [@hursh1987linear] and the latest iterations of this framework use either a two- [@gilroy2021zbe] or three-parameter variant [@gilroy2021zbe, @koff2015expt] of the contemporary framework.
 
 ## Zero and Non-Zero Asymptotes
 
-...
+Until most recently, all derivatives of the @hursh2008economic framework modeled demand non-zero upper and lower asymptotes. That is, these models were bounded at an upper ($Q_0$) and lower asymptote in a roughly S-type form. The lower bound in the original @hursh2008economic model represent the lower limit of observed non-zero consumption. The lower asymptote took a non-zero value because the log transformations of consumption produced undefined values.
 
-```{r empirical data}
+@koff2015expt provided a restatement of the @hursh2008economic framework with consumption evaluated in the linear scale. That is, exponentiation of the order of consumption was performed prevent the log transformation of observed values (which could be take a quantity of zero). The span of the demand curve, along with its associated rate of exponential decay, reflects changes in log scale before such projections are returned to the linear scale (the order of non-transformed consumption). The draw of this approach is that some of the issues with the log scale are avoided (i.e., consumption values observed at zero). However, two issues remain: error representation and the non-zero lower asymptote.
 
-# , fig.cap="Span of Demand Curve in Log Units (k)"
+## Error Representation
+
+Issues with various methods of error representation are reviewed in @gilroy2021zbe. Briefly, changes in the log and linear scale are reflectely different. That is, changes in log space are relative while changes in the linear space are absolute. Relative error is typically more suited to evaluating changes across varying in an equal fashion (e.g., $\hat{y} = 1000$, $\hat{y} = 10$, $\hat{y} = 0.1$). In this way, relative difference is emphasized and this feature specifies how each piece of information is weighted in the model.
+
+Absolute differences are much more straightforward and are not made relative. That is, error is difference from prediction regardless of scale. @gilroy2021zbe discussed this difference in the context of evaluating instances of demand that vary across orders. Specifically, error may become incomparable when fitting models to data that vary wildly across orders. For instance, data observed at high values (i.e., low prices) would theoretically have greater influences than those observed at low values (i.e, high prices) because differences close to zero have negligible influence in the absolute sense. This has led to occasionally inconsistencies between model fits between the log and linear forms of @hursh2008economic framework.
+
+## Zero Consumption and Lower Asymptotes
+
+Recent discussions on the inclusion of zero consumption values in operant demand have highlight issues with the lower asymptote in contemporary models [@gilroy2021zbe]. Specifically, both of the models described in @hursh2008economic and @koff2015expt cannot explicitly characterize demand at zero levels. Rather, each of these models has an upper asymptote defined by $Q_{0}$ and a lower asymptote defined by $Q_{0}$ and the span constant, $\textit{k}$. Regardless of the model, the asymptotes are defined as the following:
+
+\begin{equation}
+\begin{split} 
+A_{Upper} &= 10^{log_{10}Q_0 }  \\
+A_{Lower} &= 10^{log_{10}Q_0 - k}
+\end{split} 
+\end{equation}
+
+Given that these limits are defined on the log scale, it will not be possible to explicitly model zero and the lowest possible $\hat{y}$ will always at the non-zero lower asymptote. See the example notation below:
+
+\begin{equation} 
+\displaystyle{\lim_{P \to \infty} f(x)= A_{Lower}}
+\end{equation} 
+
+In this framework, which applies equally to both the log and linear restatement of the @gilroy2021zbe, the predicted values can only fall within the interval between upper and lower limits, see below:
+
+\begin{equation} 
+\hat{y}\in [{A_{Lower}},{A_{Upper}}] 
+\end{equation} 
+
+The span parameter $\textit{k}$ in the original implementation was derived from range of non-zero consumption values. As such, the $A_{Upper}$ and $A_{Lower}$ limits reflect the observed, non-zero consumption at upper and lower extremes, respectively. This was necessarily the case in the original implementation of the @hursh2008economic framework because non-zero values were dropped from the analysis. This has the effect of halting the demand curve at the lowest observed non-zero consumption value. A visualization of this behavior is provided in \autoref{fig:fig1CurveSpanEmpirical}.
+
+```{r fig1CurveSpanEmpirical, fig.cap="Span of Demand Curve with Non-zero Consumption", warning=FALSE}
 
 preFit <- data.frame(
   P = c(0.1, 1,  2,  5,  10, 50, 100, 500, 1000, 5000),
@@ -93,7 +124,7 @@ kSet = log10(max(preFit$Q)) - log10(min(preFit$Q[preFit$Q>0]))
 lowerAsymptote = 10^(log10(100) - kSet)
 
 ggplot(preFit, aes(P, Q)) +
-  ggtitle("Demand Data with Zeroes") +
+  #ggtitle("Demand Data with Zeroes") +
   geom_point() +
   annotate("segment", 
            x      = 0.1, 
@@ -102,48 +133,144 @@ ggplot(preFit, aes(P, Q)) +
            yend   = lowerAsymptote,
            colour = "red") +
   annotate("text", 
-           x     = 0.125, 
+           x     = 0.175, 
            y     = 55, 
            angle = 90,
            adj   = 0.5,
            col   = "red",
-           label = "Range of Non-zero Observed Consumption") +
+           label = "Range of Non-zero Observed Consumption\r\nFrom Upper to Lower Asymptotes") +
+  annotate("segment", 
+           x      = 0.1, 
+           xend   = 5000, 
+           y      = lowerAsymptote, 
+           yend   = lowerAsymptote,
+           colour = "red",
+           lty    = 2) +
+  annotate("text",
+           x     = 25,
+           y     = 10,
+           adj   = 0.5,
+           col   = "red",
+           parse = TRUE,
+           label = paste("'Non-Zero Lower Bound at: ' * 10^{log[10]*Q[0]-k} * ' : ' *",
+                         round(lowerAsymptote,2))) +
+  annotate("segment", 
+           x      = 0.1, 
+           xend   = 5000, 
+           y      = max(preFit$Q), 
+           yend   = max(preFit$Q),
+           colour = "red",
+           lty    = 2) +
+  annotate("text",
+           x     = 25,
+           y     = 95,
+           adj   = 0.5,
+           col   = "red",
+           label = paste("Non-Zero Upper Bound at Q0 : ",
+                         round(max(preFit$Q),2))) +
   scale_x_log10(breaks = preFit$P,
                 labels = preFit$P) +
   theme_bw()
 
 ```
 
-## Scale Differences
+Although this behavior is straightforward in the initial implementation, the span of the demand curve became a more complex issue when observed consumption was restated in the linear scale. That is, the span constant can be enlarged in an attempt to *approach* an $A_{Lower}$ limit slightly closer to 0. Originally noted in @gilroy2019exactsolve, manipulations to the span constant can be performed in instances when the observed range of non-zero consumption value in log-units does not reflect the range of consumption values regressed upon. For instance, such is the case when demand is not evaluated at $Q_{FREE}$ or when non-zero consumption values are included in the regression. In these circumstances, $A_{Upper}$ and $A_{Lower}$ are not well characterized by the upper and lower extremes of the non-zero consumption data. Focusing on the latter issue, extending the span to more closely approach 0, it is common practice to include a fixed constant. These increasingly large values increase the span of the demand curve in log units and their varying degrees of influence are illustrated in \autoref{fig:fig2CurveSpanEmpiricalMod}.
 
-...
+```{r fig2CurveSpanEmpiricalMod, fig.cap="Span of Empirical Demand Curve with Vary Spans", warning=FALSE}
 
-## Interchangeability of Scales
+preFit <- data.frame(
+  P = c(0.1, 1,  2,  5,  10, 50, 100, 500, 1000, 5000),
+  Q = c(99.54077086,
+        95.52117752,
+        91.28456421,
+        79.88382452,
+        64.51709973,
+        16.3328254,
+        5.442004322,
+        0,
+        0,
+        0)
+)
 
+#kSet = log10(max(preFit$Q)) - log10(min(preFit$Q[preFit$Q>0]))
+#lowerAsymptote = 10^(log10(100) - kSet)
 
-### Fitting Non-zero Data
+kSet1 = (log10(max(preFit$Q)) - log10(min(preFit$Q[preFit$Q>0]))) + 0
+kSet2 = (log10(max(preFit$Q)) - log10(min(preFit$Q[preFit$Q>0]))) + 0.5
+kSet3 = (log10(max(preFit$Q)) - log10(min(preFit$Q[preFit$Q>0]))) + 1
+kSet4 = (log10(max(preFit$Q)) - log10(min(preFit$Q[preFit$Q>0]))) + 2
+kSet5 = (log10(max(preFit$Q)) - log10(min(preFit$Q[preFit$Q>0]))) + 3
 
-```{r nonZeroFits}
+asymptoteFrame = data.frame(
+  Y = c(rep(10^(log10(max(preFit$Q)) - kSet1), 2),
+        rep(10^(log10(max(preFit$Q)) - kSet2), 2),
+        rep(10^(log10(max(preFit$Q)) - kSet3), 2),
+        rep(10^(log10(max(preFit$Q)) - kSet4), 2),
+        rep(10^(log10(max(preFit$Q)) - kSet5), 2)),
+  X = c(rep(c(0.1, 5000), 5)),
+  K = c(rep("K (Empirical)", 2),
+        rep("K + 0.5", 2),
+        rep("K + 1", 2),
+        rep("K + 2", 2),
+        rep("K + 3", 2))
+)
 
-preFit.trim = preFit[preFit$Q>0, ]
+ggplot(preFit, aes(P, Q)) +
+  #ggtitle("Demand Data with Zeroes (Varying Spans)") +
+  geom_point() +
+  geom_line(data = asymptoteFrame,
+            aes(X, Y, color = K),
+            inherit.aes = FALSE) +
+  annotate("text",
+           x     = 5000,
+           y     = 90,
+           adj   = 1,
+           col   = "red",
+           label = paste("K (Empirical):", round(10^(log10(max(preFit$Q)) - kSet1),4))) +
+  annotate("text",
+           x     = 5000,
+           y     = 80,
+           adj   = 1,
+           col   = "yellow",
+           label = paste("K + 0.5:", round(10^(log10(max(preFit$Q)) - kSet2),4))) +
+  annotate("text",
+           x     = 5000,
+           y     = 70,
+           adj   = 1,
+           col   = "green",
+           label = paste("K + 1:", round(10^(log10(max(preFit$Q)) - kSet3),4))) +
+  annotate("text",
+           x     = 5000,
+           y     = 60,
+           adj   = 1,
+           col   = "blue",
+           label = paste("K + 2:", round(10^(log10(max(preFit$Q)) - kSet4),4))) +
+  annotate("text",
+           x     = 5000,
+           y     = 50,
+           adj   = 1,
+           col   = "purple",
+           label = paste("K + 3:", round(10^(log10(max(preFit$Q)) - kSet5),4))) +
+  scale_x_log10(breaks = preFit$P,
+                labels = preFit$P) +
+  theme_bw() +
+  theme(legend.position = "bottom")
 
-kSet = log10(max(preFit$Q)) - log10(min(preFit$Q[preFit$Q>0]))
+```
 
-EXPT = nls(Q ~ Q0 * 10^(kSet*(exp(-a * 100 * P)-1)),
-           data = preFit.trim,
-           start = c(a  = 0.0001,
-                     Q0 = 100),
-           lower = c(a = -Inf,
-                     Q0 = 1),
-           upper = c(a = Inf,
-                     Q0 = 100),
-           algorithm = "port",
-           control = list(
-             maxiter = 1000,
-             warnOnly = FALSE
-           ))
+The increasing of the span has two primary effects. First, the rate of change in elasticity is jointly reflected by parameter $\alpha$ and the span constant. As such, the rate of change in the model is predicated on the upper and lower limits. That is, the span constant reflects the rate of change, as a function of $P$, as $\hat{y}$ advances from $A_{Upper}$ to $A_{Lower}$. Second, the gap between $A_{Lower}$ and true zero decreases proportionally with a larger $\textit{k}$. As shown in \autoref{fig:fig2CurveSpanEmpiricalMod}, larger $\textit{k}$ more closely approach zero but $A_{Lower}$ can never be true zero in this approach.
 
-preFit.trim$exptPred = predict(EXPT)
+## Same Model, Different Error
+
+As noted in earlier works [@gilroy2021zbe, @koff2015expt], the various implementations of the @hursh2008economic framework differ primarily in how residual error is interpreted when optimizing model parameters. For all intents and purposes, both models function in the same manner. That is, the $A_{Upper}$ and $A_{Lower}$ exist in the same fashion because both the @hursh2008economic and @koff2015expt represent the span of the demand curve in log units. In cases where no zero-valued consumption is included in the regression, fits between the log and linear interpretations of the @hursh2008economic model provide similar estimates. Further, re-weighting of the the errors in the linear restatement (i.e., relative to $\hat{y}$) yields fits and estimates that are essentially identical to that of the log form. These fits are illustrated in an example data set in \autoref{fig:fig3ComparisonNonzeroRelativeError}.
+
+```{r fig3ComparisonNonzeroRelativeError, fig.cap="Comparable Model Fits with Comparable Error"}
+
+preFit.trim = preFit[preFit$Q > 0, ]
+
+kSet = log10(max(preFit$Q)) - log10(min(preFit$Q[preFit$Q > 0]))
+
+### HS2008
 
 EXPL = nls(log(Q)/log(10) ~ log(Q0)/log(10) + kSet*(exp(-a * 100 * P)-1),
            data = preFit.trim,
@@ -156,14 +283,52 @@ EXPL = nls(log(Q)/log(10) ~ log(Q0)/log(10) + kSet*(exp(-a * 100 * P)-1),
            algorithm = "port",
            control = list(
              maxiter = 1000,
-             warnOnly = FALSE
+             warnOnly = TRUE
            ))
 
 preFit.trim$explPred = 10^predict(EXPL)
 
+### Koff2015
+
+EXPT = nls(Q ~ Q0 * 10^(kSet*(exp(-a * 100 * P)-1)),
+           data = preFit.trim,
+           start = c(a  = 0.0001,
+                     Q0 = 100),
+           lower = c(a = -Inf,
+                     Q0 = 1),
+           upper = c(a = Inf,
+                     Q0 = 100),
+           algorithm = "port",
+           control = list(
+             maxiter = 1000,
+             warnOnly = TRUE
+           ))
+
+preFit.trim$exptPred = predict(EXPT)
+
+### Koff2015 Relative Error
+
+EXPTrel = nls(Q ~ Q0 * 10^(kSet*(exp(-a * 100 * P)-1)),
+           data = preFit.trim,
+           start = c(a  = 0.0001,
+                     Q0 = 100),
+           lower = c(a = -Inf,
+                     Q0 = 1),
+           upper = c(a = Inf,
+                     Q0 = 100),
+           algorithm = "port",
+           weights = 1/(predict(EXPT)^2),
+           control = list(
+             maxiter = 1000,
+             warnOnly = TRUE
+           ))
+
+preFit.trim$exptRelPred = predict(EXPTrel)
+
 preFit.trim = preFit.trim %>%
   rename(`Exponential`   = explPred,
-         `Exponentiated` = exptPred) 
+         `Exponentiated (Absolute Error)` = exptPred,
+         `Exponentiated (Relative Error)` = exptRelPred) 
 
 # kable(preFit.trim) %>%
 #   kable_styling(full_width = TRUE)
@@ -172,185 +337,39 @@ preFit.trim = preFit.trim %>%
   gather(Model, Prediction, -Q, -P) 
 
 ggplot(preFit.trim, aes(P, Q, color = Model)) +
-  geom_point() +
+  #ggtitle("TODO: Add title") +
+  geom_point(color = "black") +
   geom_line(aes(P, Prediction)) +
-  facet_wrap(~Model, ncol = 2) +
+  facet_wrap(~Model, ncol = 3) +
+  scale_y_log10(breaks = c(1, 10, 100),
+                labels = c(1, 10, 100),
+                limits = c(1, 100)) +
   theme_bw() +
   theme(legend.position = "bottom")
 
 ```
 
-### Fitting Zero Data
+```{r }
 
-```{r zeroFitsRaw}
-
-kSet = log10(max(preFit$Q)) - 
-       log10(min(preFit$Q[preFit$Q>0]))
-
-lowerAsymptote = 10^(log10(max(preFit$Q)) - kSet)
-
-preFit.trim = preFit[preFit$Q>0, ]
-
-newData = data.frame(
-  P = seq(0.1, 5000, length.out = 5000),
-  Q = 0
+preFit <- data.frame(
+  P = c(0.1, 1,  2,  5,  10, 50, 100, 500, 1000, 5000),
+  Q = c(99.54077086,
+        95.52117752,
+        91.28456421,
+        79.88382452,
+        64.51709973,
+        16.3328254,
+        5.442004322,
+        0,
+        0,
+        0)
 )
 
-newData$pred = predict(EXPT, newdata = newData)
+kSet = (log10(max(preFit$Q)) - log10(min(preFit$Q[preFit$Q > 0]))) + 3
 
-ggplot(preFit, aes(P, Q)) +
-  ggtitle("Demand Data without Zeroes (EXPT; k = Observed Span)") +
-  geom_point() +
-  geom_line(data = newData, aes(P, pred), col = "blue") +
-  annotate("segment",
-           x      = 0.1,
-           xend   = 0.1,
-           y      = 100,
-           yend   = lowerAsymptote,
-           colour = "red") +
-  annotate("text", 
-           x     = 0.125,
-           y     = 55,
-           angle = 90,
-           adj   = 0.5,
-           col   = "red",
-           label = "Range of Non-zero Observed Consumption") +
-  annotate("segment", 
-           x      = 0.1, 
-           xend   = 5000, 
-           y      = lowerAsymptote, 
-           yend   = lowerAsymptote,
-           colour = "red",
-           lty    = 2) +
-  scale_x_log10(breaks = preFit$P,
-                labels = preFit$P) +
-  theme_bw() +
-  theme(legend.position = "bottom")
-
-#########
-
-preFit.trim = preFit[preFit$Q>0, ]
-
-kSet = log10(max(preFit$Q)) - log10(min(preFit$Q[preFit$Q>0]))
+newAsymptote = 10^(log10(max(preFit$Q)) - kSet)
 
 EXPT = nls(Q ~ Q0 * 10^(kSet*(exp(-a * 100 * P)-1)),
-           data = preFit,
-           start = c(a  = 0.0001,
-                     Q0 = 100),
-           lower = c(a = -Inf,
-                     Q0 = 1),
-           upper = c(a = Inf,
-                     Q0 = 100),
-           algorithm = "port",
-           control = list(
-             maxiter = 1000,
-             warnOnly = FALSE
-           ))
-
-newData = data.frame(
-  P = seq(0.1, 5000, length.out = 5000),
-  Q = 0
-)
-
-newData$pred = predict(EXPT, newdata = newData)
-
-#########
-
-kSet1 = log10(max(preFit$Q)) - log10(min(preFit$Q[preFit$Q>0])) + 0
-kSet2 = log10(max(preFit$Q)) - log10(min(preFit$Q[preFit$Q>0])) + 0.5
-kSet3 = log10(max(preFit$Q)) - log10(min(preFit$Q[preFit$Q>0])) + 1
-kSet4 = log10(max(preFit$Q)) - log10(min(preFit$Q[preFit$Q>0])) + 2
-kSet5 = log10(max(preFit$Q)) - log10(min(preFit$Q[preFit$Q>0])) + 3
-
-EXPT1= nls(Q ~ Q0 * 10^(kSet1*(exp(-a * 100 * P)-1)),
-           data = preFit,
-           start = c(a  = 0.0001,
-                     Q0 = 100),
-           lower = c(a = -Inf,
-                     Q0 = 1),
-           upper = c(a = Inf,
-                     Q0 = 100),
-           algorithm = "port",
-           control = list(
-             maxiter = 1000,
-             warnOnly = FALSE
-           ))
-
-newData1 = data.frame(
-  P = seq(0.1, 5000, length.out = 5000),
-  K = "Observed",
-  Q = 0
-)
-
-newData1$pred = predict(EXPT1, newdata = newData1)
-
-EXPT2= nls(Q ~ Q0 * 10^(kSet2*(exp(-a * 100 * P)-1)),
-           data = preFit,
-           start = c(a  = 0.0001,
-                     Q0 = 100),
-           lower = c(a = -Inf,
-                     Q0 = 1),
-           upper = c(a = Inf,
-                     Q0 = 100),
-           algorithm = "port",
-           control = list(
-             maxiter = 1000,
-             warnOnly = FALSE
-           ))
-
-newData2 = data.frame(
-  P = seq(0.1, 5000, length.out = 5000),
-  K = "Observed + 0.5",
-  Q = 0
-)
-
-newData2$pred = predict(EXPT2, newdata = newData2)
-
-EXPT3= nls(Q ~ Q0 * 10^(kSet3*(exp(-a * 100 * P)-1)),
-           data = preFit,
-           start = c(a  = 0.0001,
-                     Q0 = 100),
-           lower = c(a = -Inf,
-                     Q0 = 1),
-           upper = c(a = Inf,
-                     Q0 = 100),
-           algorithm = "port",
-           control = list(
-             maxiter = 1000,
-             warnOnly = FALSE
-           ))
-
-newData3 = data.frame(
-  P = seq(0.1, 5000, length.out = 5000),
-  K = "Observed + 1",
-  Q = 0
-)
-
-newData3$pred = predict(EXPT3, newdata = newData3)
-
-EXPT4= nls(Q ~ Q0 * 10^(kSet4*(exp(-a * 100 * P)-1)),
-           data = preFit,
-           start = c(a  = 0.0001,
-                     Q0 = 100),
-           lower = c(a = -Inf,
-                     Q0 = 1),
-           upper = c(a = Inf,
-                     Q0 = 100),
-           algorithm = "port",
-           control = list(
-             maxiter = 1000,
-             warnOnly = FALSE
-           ))
-
-newData4 = data.frame(
-  P = seq(0.1, 5000, length.out = 5000),
-  K = "Observed + 2",
-  Q = 0
-)
-
-newData4$pred = predict(EXPT4, newdata = newData4)
-
-EXPT5= nls(Q ~ Q0 * 10^(kSet5*(exp(-a * 100 * P)-1)),
            data = preFit,
            start = c(a  = 0.0001,
                      Q0 = 100),
@@ -364,52 +383,137 @@ EXPT5= nls(Q ~ Q0 * 10^(kSet5*(exp(-a * 100 * P)-1)),
              warnOnly = TRUE
            ))
 
-newData5 = data.frame(
-  P = seq(0.1, 5000, length.out = 5000),
-  K = "Observed + 3",
-  Q = 0
-)
+preFit[preFit$Q == 0, "Q"] = newAsymptote
 
-newData5$pred = predict(EXPT5, newdata = newData5)
+preFit$exptPred = predict(EXPT)
 
-totalNewData = rbind(
-  newData1,
-  newData2,
-  newData3,
-  newData4,
-  newData5
-)
+EXPL = nls(log(Q)/log(10) ~ log(Q0)/log(10) + kSet*(exp(-a * 100 * P)-1),
+           data = preFit,
+           start = c(a  = 0.0001,
+                     Q0 = 100),
+           lower = c(a = -Inf,
+                     Q0 = 1),
+           upper = c(a = Inf,
+                     Q0 = 100),
+           algorithm = "port",
+           control = list(
+             maxiter = 1000,
+             warnOnly = TRUE
+           ))
 
-ggplot(preFit, aes(P, Q)) +
-  ggtitle("Demand Data with Zeroes (EXPT; k = Observed Span)") +
+prePreds = predict(EXPL)
+
+preFit$explPred = 10^prePreds
+
+#print(prePreds)
+
+EXPL2 = nls(log(Q)/log(10) ~ log(Q0)/log(10) + kSet*(exp(-a * 100 * P)-1),
+           data = preFit,
+           start = c(a  = 0.0001,
+                     Q0 = 100),
+           lower = c(a = -Inf,
+                     Q0 = 1),
+           upper = c(a = Inf,
+                     Q0 = 100),
+           weights = (10^prePreds)^2,
+           algorithm = "port",
+           control = list(
+             maxiter = 1000,
+             warnOnly = TRUE
+           ))
+
+postPreds = predict(EXPL2)
+
+#preFit$explPred = 10^prePreds
+
+preFit$explPred2 = 10^postPreds
+
+displayFrame = data.frame(
+    P                          = preFit$P,
+    Q                          = preFit$Q,
+    `Exponential-Relative`     = preFit$explPred,
+    `Exponential-Absolute`     = preFit$explPred2,
+    `Exponentiated`            = preFit$exptPred
+  )
+
+preFit = preFit %>%
+  rename(`Exponential (Relative)`   = explPred,
+         `Exponential (Absolute)`   = explPred2,
+         `Exponentiated`            = exptPred) 
+
+# kable(preFit) %>%
+#   kable_styling(full_width = TRUE)
+
+preFit.g = preFit %>%
+  gather(Model, Prediction, -Q, -P) %>%
+  mutate(Model = factor(Model,
+                        levels = c(
+                          "Exponentiated",
+                          "Exponential (Relative)",
+                          "Exponential (Absolute)"
+                        )))
+
+```
+
+Although the field is now more aware to the differences between relative vs. absolute error, relatively few researchers have discussed the importance of $A_{Lower}$ in the @hursh2008economic framework. This is particularly complex in the linear restatement, as zero valued consumption is often included in the regression despite an inability to characterize demand at zero. Rather, the implementation put forward in @koff2015expt minimizes the impact of zeroes on the log scale by capitalizing on the relatively small difference between $A_{Lower}$ and 0 on the linear scale. Pragmatically, most researchers care little for such a small amount of error, this raises an interesting argument of what is being considered "close enough" when handling 0 consumption values. 
+
+For the sake of argument, let us say that the restatement of the @hursh2008economic framework put forward in @koff2015expt considers values at $A_{Lower}$ to be "close enough" to 0 to reasonably resemble consumption at such levels. That is, $A_{Lower}$ is consider approximate to 0 in this instance. Given that $A_{Lower}$ is considered close enough to zero (i.e., the difference is negligible), it should be no matter of significance to treat the observed 0 values as $A_{Lower}$. The result of the exponentiation of the terms of the @hursh2008economic model allows the regression to proceed (foregoing problematic log transforms) by treating consumption values at high prices (i.e., likely at or near zero) as if they took the value of $A_{Lower}$.
+
+Consider the data in \autoref{fig:fig2CurveSpanEmpiricalMod}. In entirety, only the @koff2015expt would proceed under these conditions because of the problematic log transformation. However, holding the span parameter $k$ constant and replacing 0 values with $A_{Lower}$, the projections between @koff2015expt and the @hursh2008economic converge quite closely, see \autoref{fig:fig4ComparisonZeroRelative}. Even further, re-weighting the @hursh2008economic to absolute difference error produces an even closer approximation between the two, see \autoref{fig:fig4ComparisonZeroRelative} and see \autoref{tab:table1ComparisonZeroAbsolute}.
+
+```{r fig4ComparisonZeroRelative, warning=FALSE, fig.cap="Comparable Model Fits with Comparable Asymptotes"}
+
+ggplot(preFit.g, aes(P, Q, color = Model)) +
   geom_point() +
-  geom_line(data = totalNewData, aes(P, pred, color = K), inherit.aes = FALSE) +
-  annotate("text",
-           x     = 0.125,
-           y     = 55,
-           angle = 90,
-           adj   = 0.5,
-           col   = "red",
-           label = "Range of Non-zero Observed Consumption") +
-  scale_x_log10(breaks = preFit$P,
-                labels = preFit$P) +
+  geom_line(aes(P, Prediction)) +
+  scale_x_log10(breaks = c(0.1, 10, 100, 1000, 10000),
+                labels = c(0.1, 10, 100, 1000, 10000),
+                limits = c(0.1, 10000)) +
+  scale_y_log10(breaks = c(0.001, 0.01, 0.1, 1, 10, 100),
+                labels = c(0.001, 0.01, 0.1, 1, 10, 100),
+                limits = c(0.001, 100)) +
+  facet_wrap(~Model, ncol = 3) +
   theme_bw() +
   theme(legend.position = "bottom")
 
 ```
 
-Asymptote for Observed + 0 = `r 10^(log10(max(preFit$Q)) - (log10(max(preFit$Q)) - log10(min(preFit$Q[preFit$Q>0])) + 0))`
+```{r table1ComparisonZeroAbsolute}
 
-Asymptote for Observed + 0.5 = `r 10^(log10(max(preFit$Q)) - (log10(max(preFit$Q)) - log10(min(preFit$Q[preFit$Q>0])) + 0.5))`
+displayFrame %>% 
+  apa_table(., 
+            digits  = 3,
+            caption = "Comparison of Exponentiated and Absolute-Weighted Exponential Models")
 
-Asymptote for Observed + 1 = `r 10^(log10(max(preFit$Q)) - (log10(max(preFit$Q)) - log10(min(preFit$Q[preFit$Q>0])) + 1))`
+```
 
-Asymptote for Observed + 2 = `r 10^(log10(max(preFit$Q)) - (log10(max(preFit$Q)) - log10(min(preFit$Q[preFit$Q>0])) + 2))`
+In the hypothetical data series modeled in \autoref{fig:fig4ComparisonZeroRelative}, fits with the original (relative and absolute error representations) and exponentiated forms of the @hursh2008economic framework provide highly similar fits when controlling for the $A_{Lower}$. That is, the approach put forward in @koff2015expt uses $A_{Lower}$ as a "close enough" proxy to zero and simply replacing 0 with $A_{Lower}$ in the @hursh2008economic implementation provides essentially the same fit. As indicated in \autoref{tab:table1ComparisonZeroAbsolute}, the projections between each of these implementations becomes even closer when the @hursh2008economic implementation is amended to treat differences in error as absolute. This is particularly relevant as when low values that differ slightly in absolute value differ greatly in relative value.
 
-Asymptote for Observed + 3 = `r 10^(log10(max(preFit$Q)) - (log10(max(preFit$Q)) - log10(min(preFit$Q[preFit$Q>0])) + 3))`
+The considerable influence of near-zero values and relative error are described well in @koff2015expt. As noted in that work, the replacement of zero values with *arbitrary* constants led to wildly varying effects on fits using the @hursh2008economic framework. Indeed, most agree that constructing a common $A_{Lower}$ (e.g., for all demand series) with a small constant (e.g., 0.1, 0.01) is unfavorable. However, I have several reservations regarding the evaluations of 
+@koff2015expt
 
 
-\pagebreak
+This poor performance makes good sense when viewed in light of \autoref{fig:fig1CurveSpanEmpirical}. That is, span of the demand curve 
+
+$A_{Upper}$ and $A_{Lower}$
+
+
+
+
+global lower constant
+
+replacement of zero values with an 
+
+
+
+
+of the linear model (including zero values) are nearly identical to fits of 
+
+TODO: Zero handling
+
+TODO: Zero replacement issues
+
+TODO: Whether exponentiation really solves the issues 
 
 # Methods
 
@@ -429,7 +533,12 @@ Asymptote for Observed + 3 = `r 10^(log10(max(preFit$Q)) - (log10(max(preFit$Q))
 
 ## Data analysis
 
-We used `r cite_r("r-references.bib")` for all our analyses.
+```{r eval=FALSE}
+
+#We used `r cite_r("r-references.bib")` for all our analyses.
+
+
+```
 
 # Results
 
