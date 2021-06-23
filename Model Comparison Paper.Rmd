@@ -171,7 +171,7 @@ ggplot(preFit, aes(P, Q)) +
 
 Whereas the determination of parameter $\textit{k}$ in the @hursh2008economic implementation is more directly linked to observed (non-zero) consumption data, the determination of parameter $\textit{k}$ became more abstract in the implementation introduced by @koff2015expt. That is, parameter $\textit{k}$ could not longer be linked to observed (non-zero) consumption data because $A_{Lower}$ would not extend beyond the range of non-zero consumption. Anecdotally, various labs and teams using this model have either opted to either add a small constant to parameter $\textit{k}$ or fit this as a free parameter--both with the intent of *increasing* the span, and thus, driving $A_{Lower}$ to a point closer to 0 on the linear scale. A visualization of this behavior is illustrated in \autoref{fig:fig2CurveSpanEmpiricalMod}.
 
-```{r fig2CurveSpanEmpiricalMod, fig.cap="Span of Empirical Demand Curve with Vary Spans", warning=FALSE}
+```{r fig2CurveSpanEmpiricalMod, fig.cap="Span of Empirical Demand Curve with Vary Spans", warning=FALSE, fig.height=3.5}
 
 preFit <- data.frame(
   P = c(0.1, 1,  2,  5,  10, 50, 100, 500, 1000, 5000),
@@ -213,37 +213,37 @@ ggplot(preFit, aes(P, Q)) +
             aes(X, Y, color = K),
             inherit.aes = FALSE) +
   annotate("text",
-           x     = 5000,
+           x     = 100,
            y     = 90,
-           adj   = 1,
+           adj   = 0,
            col   = "red",
            parse = TRUE,
            label = expression("K (Empirical): " ~ A[LOWER] == 5.442)) +
   annotate("text",
-           x     = 5000,
-           y     = 80,
-           adj   = 1,
-           col   = "yellow",
+           x     = 100,
+           y     = 75,
+           adj   = 0,
+           col   = "orange",
            parse = TRUE,
            label = expression("K + 0.5: " ~ A[LOWER] == 1.7209)) +
   annotate("text",
-           x     = 5000,
-           y     = 70,
-           adj   = 1,
+           x     = 100,
+           y     = 60,
+           adj   = 0,
            col   = "green",
            parse = TRUE,
            label = expression("K + 1: " ~ A[LOWER] == 0.5442)) +
   annotate("text",
-           x     = 5000,
-           y     = 60,
-           adj   = 1,
+           x     = 100,
+           y     = 45,
+           adj   = 0,
            col   = "blue",
            parse = TRUE,
            label = expression("K + 2: " ~ A[LOWER] == 0.0544)) +
   annotate("text",
-           x     = 5000,
-           y     = 50,
-           adj   = 1,
+           x     = 100,
+           y     = 30,
+           adj   = 0,
            col   = "purple",
            parse = TRUE,
            label = expression("K + 3: " ~ A[LOWER] == 0.0054)) +
@@ -455,7 +455,7 @@ Regarding the second point, few researchers have explored $A_{Lower}$ and how th
 
 Revisiting the second point, consider the following logic. For the sake of argument, let us say that the @koff2015expt model considers values at $A_{Lower}$ to be *close enough* to 0 to reasonably approximate consumption at such levels. That is, $A_{Lower}$ is considered sufficiently approximate to 0. Following this logic, it stands to reason that treating 0 consumption values as $A_{Lower}$ is equally appropriate because 1) this allows demand to be projected beyond observed non-zero levels (i.e., accomodates 0 values) and 2) it is close enough to 0 that the absolute differences are considered negligible. In this arrangement, it stands to reason that the @koff2015expt model should perform in the same ways as the @hursh2008economic model, were errors also treated in terms of absolute difference. Using the full data displayed in \autoref{fig:fig1CurveSpanEmpirical}, let us fit the @koff2015expt model using the full dataset and the @hursh2008economic model with the zeroes replaced by the lowest $A_{Lower}$ illustrated in \autoref{fig:fig2CurveSpanEmpiricalMod}, i.e. $10^{log{10}Q_0 - (k + 3)}$. The results of these hypothetical analyses are illustrated in \autoref{fig:fig4ComparisonZeroRelative}. Across these series, the @hursh2008economic model (with and without relative error weighting) provide nearly identical fits to the @koff2015expt model. Additionally, de-weighting the @hursh2008economic to minimize absolute differences produces an even closer approximation between the two, see \autoref{tab:table1ComparisonZeroAbsolute}.
 
-```{r fig4ComparisonZeroRelative, warning=FALSE, fig.cap="Comparable Model Fits with Comparable Asymptotes", fig.height=3.5}
+```{r fig4ComparisonZeroRelative, warning=FALSE, fig.cap="Comparable Model Fits with Comparable Asymptotes", fig.height=3}
 
 ggplot(preFit.g, aes(P, Q, color = Model)) +
   geom_point() +
@@ -541,7 +541,7 @@ Individual comparisons were prepared for both parameters $Q_0$ and $\alpha$ resu
 
 # Results
 
-```{r fig4, fig.cap="Comparisons of Modeling Strategies", fig.height=9}
+```{r fig4, fig.cap="Comparisons of Modeling Strategies", fig.height=5.5}
 
 dataFramePrep = data.frame(
   id      = 1:nParticipants,
@@ -707,11 +707,11 @@ tost(frameToAnalyze$a.Koff,
 cor.test(frameToAnalyze$a.Koff, frameToAnalyze$a.HS)
 ```
 
-An evaluation of the relationship between Strategy 1 and 2 revealed strong correlations for $Q_0$ (r = 0.8955, t = 17.313, df = 74, p-value < 2.2e-16) as well as for $\alpha$ (r = 0.9344, t = 22.515, df = 74, p-value < 2.2e-16). The results of TOSTs for $Q_0$ and $\alpha$ were non-significant (*p* = 0.244) and significant (*p* < 2.2e-16), respectively. That is, the results of the two strategies appeared to provide equivalent estimates for $\alpha$ but not for $Q_0$.
+An evaluation of the relationship between Strategy 1 and 2 revealed strong correlations for $Q_0$ (r = 0.8955, t = 17.313, df = 74, *p* < 2.2e-16) as well as for $\alpha$ (r = 0.9344, t = 22.515, df = 74, *p* < 2.2e-16). The results of TOSTs for $Q_0$ and $\alpha$ were non-significant (*p* = 0.244) and significant (*p* < 2.2e-16), respectively. That is, the results of the two strategies appeared to provide statistically equivalent estimates for $\alpha$ but not for $Q_0$.
 
 ## Strategy 1 vs. Strategy 3
 
-```{r strat1vsstrat3}
+```{r strat1vsstrat3, include=FALSE}
 ### TODO: Addin in
 
 print("Q0s (w)")
@@ -734,15 +734,17 @@ cor.test(frameToAnalyze$q0.Koff, frameToAnalyze$q0.HSw)
 
 ```
 
-```{r }
-### TODO: Addin in
-```
-
-Comparisons between Strategy 2 and 3 revealed a perfect correlation for $Q_0$ (r = 1, t = 82678, df = 74, p-value < 2.2e-16). Similarly, there was also a near perfect correlation for $\alpha$ (r = 0.9999, t = 22.515, df = 74, p-value < 2.2e-16). Scatterplot visualization of these two strategie indicated that, overall, the two approaches corresponded near perfectly.
+Evaluations of the relationship between Strategy 2 and 3 revealed nearly perfect correlations for $Q_0$ (r = 1, t = 82678, df = 74, *p* < 2.2e-16) and $\alpha$ (r = 0.9999, t = 22.515, df = 74, *p* < 2.2e-16). Similarly, the results of TOSTs for $Q_0$ (*p* = 1) and $\alpha$ (*p* = 1) were significant overall. That is, the results of the two strategies appeared to produce statistically equivalent model parameters across both $Q_0$ and $\alpha$.
 
 # Discussion
 
-The purpose of this technical report was to further explore the role of zero and non-zero asymptotes in two popular models of operant demand. Indeed, debate as to whether 0 consumption values contribute to the characterization of demand continue to date. 
+The Operant Demand Framework is increasingly applied to various areas of clinical and significance [@hursh2013behavioral, @reed2013behavioral]. Furthermore, models of operant demand are increasingly support in a variety of statistical packages and tools [@kaplan2019r, gilroy2018demand]. Within each of these applications and tools, a variety of modeling options are available with few firm guidelines for determining which is best suited for each scenario. The purpose of this technical report was to review the pragmatic and mathematical underpinnings of two variants derived from the framework of @hursh2008economic--the Exponential [@hursh2008economic] and the Exponentiated [@koff2015expt] models of operant demand.
+
+This report provides an in-depth review of how 0 consumption values have thus far been incorporated in evaluations of operant demand. That is, neither the Exponential and Exponentiated models may character demand at 0 and both are restricted to $A_{Lower}$ in the same manner. Furthermore, controlling for how error is minimized, fitting the Exponentiated model is statistically equivalent to optimizing the Exponential model using absolute error and replacing 0 values with $A_{Lower}$. Indeed, results of computer simulation and comparisons using a data generating process used in the @koff2015expt study confirm that the two models are essentially equivalent and that neither can characterize demand at 0, just at $A_{Lower}$.
+
+## On Splitting Hairs in Operant Demand
+
+The goal of this report is neither to discourage the use of the @koff2015expt nor sing the praises of the original @hursh2008economic model. Rather, this is written such that all of the referenced works have advanced the scope and breadth of the Operant Demand Framework. Indeed, strong preferences towards any specific model invite the potential for bias and researchers should carefully measure their analytical strategies against others based on how well they fit the research question(s). 
 
 \newpage
 
