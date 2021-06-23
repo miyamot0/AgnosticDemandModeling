@@ -1,14 +1,14 @@
 ---
-title             : "The Exponential Model's New Clothes"
+title             : "Asymptotes and Models of Operant Demand: Re-uniting the Hursh & Silberburg Framework"
 shorttitle        : "Exponential Model"
 
 author: 
-  - name          : "Shawn Gilroy"
+  - name          : "Shawn P. Gilroy"
     affiliation   : "1"
-    corresponding : yes    # Define only one corresponding author
+    corresponding : yes
     address       : "226 Audubon Hall Baton Rouge, Louisiana 70806"
     email         : "sgilroy1@lsu.edu"
-    role:         
+    role:
       - Conceptualization
       - Writing - Original Draft Preparation
       - Writing - Review & Editing
@@ -18,10 +18,10 @@ affiliation:
     institution   : "Louisiana State University"
 
 authornote: |
-  Shawn Gilroy. Louisiana State University. Correspondence should be directed to sgilroy1@lsu.edu
+  Shawn Patrick Gilroy is an Assistant Professor of School Psychology at Louisiana State University. Correspondence should be directed to sgilroy1@lsu.edu. The source code necessary to recreate this work is publicly hosted in a repository at: https://github.com/miyamot0/AgnosticDemandModeling 
 
 abstract: |
-  Operant translations of Behavioral Economic concepts and principles have successfully enhanced the ability to predict and characterize individual choice. Specifically, Behavioral Economic models of choices (e.g., demand) have been particularly useful in evaluating how decision-makers arrives at choices under constraint (e.g., limited price, resources). With respect to operant demand, the prevailing approach in the Behavior Analytic literature draws from the framework of Hursh & Silberburg (2008). Although few would argue the merits of this framework, debate continues with regard to how to address limitations of the logarithmic scale. Specifically, there are opposing opinions regarding the handling of zero values and which restatement of Hursh & Silberburg (2008) fares best under certain situations. The purpose of this technical report is to review the limited ways in which the original and exponentiated forms differ and how slight manipulations in the application of each lead to equivalent results.
+  Operant translations of Behavioral Economic concepts and principles have enhanced the ability of researchers to characterize individual choice under constraints and uncertainty. Operant Behavioral Economic models of concurrent choices (i.e., demand) have been particularly useful in evaluating how individual choices are affected by various ecological factors (e.g., price, limited resources). Prevailing perspectives in Operant Demand are derived from the framework of Hursh & Silberburg (2008). Few dispute the utility of this framework, though considerable debate continues regarding how best to address limitations associated with the logarithmic scale. At present, there are opposing views regarding the handling of zero values and under which situations alternative restatements of this framework are warranted, c.f. Koffarnus et al. (2015). The purpose of this report is to review the importance of asymptotes in the Operant Demand Framework and the relatively minor ways in which the Hursh & Silberburg (2008) and Koffarnus et al. (2015) differ. A simulation study is provided as a demonstration of how results from the two models can be largely interchangeable when addressing asymptote and error differences. Additional discussion is provided on whether having multiple models extends the Operant Demand Framework.
 
 keywords          : "behavioral economics, operant demand, consumption, zero asymptotes"
 wordcount         : "X"
@@ -66,23 +66,19 @@ knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
 
 # Introduction
 
-Contemporary methods for evaluating the consumption of goods and services in an operant framework draw heavily from the methodology proposed in @hursh2008economic. This evolving strategy and methodology has taken various forms [@hursh1987linear] and the latest iterations of this framework use either a two- [@gilroy2021zbe] or three-parameter variant [@gilroy2021zbe, @koff2015expt] of the contemporary framework.
+Contemporary methods for evaluating the consumption of goods and services in an Operant Demand Framework draws heavily from the methodology proposed in @hursh2008economic. This framework and methodology has grown through several iterations [@hursh1987linear] with the most recent extensions of the @hursh2008economic framework adopting the linear [@koff2015expt] or another log-like scale [@gilroy2021zbe].
 
-## Zero and Non-Zero Asymptotes
+The original implementation of the @hursh2008economic framework was constructed to generate an "s-type" to the demand curve. The original intent was to have an upper asymptote reached at a low (or free) price and a lower asymptote reached as prices approached infinity [@gilroy2021zbe]. Until most recently, this framework [@hursh2008economic, @koff2015expt] modeled demand for reinforcers with non-zero upper and lower asymptotes. That is, these models were bounded at an upper limit (i.e., $Q_0$) and progressed towards a lower asymptote in a roughly S-type form. The non-zero asymptotes in the @hursh2008economic framework make good sense because the consumption values of interest were positive real values. Such quantities were necessary because the logarithmic representation of consumption is undefined.
 
-Until most recently, all derivatives of the @hursh2008economic framework modeled demand non-zero upper and lower asymptotes. That is, these models were bounded at an upper ($Q_0$) and lower asymptote in a roughly S-type form. The lower bound in the original @hursh2008economic model represent the lower limit of observed non-zero consumption. The lower asymptote took a non-zero value because the log transformations of consumption produced undefined values.
+In response to the omission of zero-valued data, @koff2015expt introduced a restatement of the @hursh2008economic framework but with changes in observed consumption reflected on the linear scale. Specifically, an exponentiation of terms was performed such that the LHS of the @hursh2008economic model were in the linear scale. In this way, the LHS of the model (i.e., consumption) need not be submitted to the log transformation that previous prevented the use of the @hursh2008economic. The draw of this approach is that one of the largest issues associated with the log scale can be avoided. However, it warrants noting that portions of the RHS of the @koff2015expt model remain on the log scale. Specifically, the span of the demand curve and the rate of exponential decay remain in the log scale. The span of the demand curve in this restated model cannot reach a zero point, and thus, is also bound to non-zero upper and lower asymptotes. Additionally, the regressive process for logarithmic and linear models differs in how error is weighted and this introduces behavior novel to the @hursh2008economic framework.
 
-@koff2015expt provided a restatement of the @hursh2008economic framework with consumption evaluated in the linear scale. That is, exponentiation of the order of consumption was performed prevent the log transformation of observed values (which could be take a quantity of zero). The span of the demand curve, along with its associated rate of exponential decay, reflects changes in log scale before such projections are returned to the linear scale (the order of non-transformed consumption). The draw of this approach is that some of the issues with the log scale are avoided (i.e., consumption values observed at zero). However, two issues remain: error representation and the non-zero lower asymptote.
+Issues associated with varying methods of minimizing model error are increasingly visible in the Operant Demand Framework [@gilroy2021zbe]. @gilroy2021zbe noted that residual error is reflected different in log and linear scales. That is, changes in log space reflect relative difference and changes in the linear space are absolute. In most economic applications, relative error is typically because projections (i.e., $\hat{y}$) may span multiple order and observed values at higher orders would be weighted more heavily than those at lower orders (e.g., $\hat{y} = 1000$, $\hat{y} = 10$, $\hat{y} = 0.1$). In this way, relative difference is emphasized and this feature balances how each piece of information is weighted in the model. 
 
-## Error Representation
+As an alternative to relative difference, absolute difference is more straightforward. That is, absolute error is difference from $\hat{y}$ regardless of scale. @gilroy2021zbe discussed how the departure from relative error handling can affect the modeling of demand that differs across orders. For example, error may become incomparable when fitting a model to sets of data that vary considerably across orders. This has led to occasionally inconsistencies between model fits between the log and linear forms of @hursh2008economic framework (e.g., shared alpha across varying dose-response curves).
 
-Issues with various methods of error representation are reviewed in @gilroy2021zbe. Briefly, changes in the log and linear scale are reflected different. That is, changes in log space are relative while changes in the linear space are absolute. Relative error is typically more suited to evaluating changes across varying in an equal fashion (e.g., $\hat{y} = 1000$, $\hat{y} = 10$, $\hat{y} = 0.1$). In this way, relative difference is emphasized and this feature specifies how each piece of information is weighted in the model.
+Apart from difference in how residual errors are weighted, the issue of zero and non-zero asymptotes has become a topic of discussion [@gilroy2021zbe]. The @gilroy2021zbe work is not discussed at length here; however, readers are encouraged to review this work for an exposition on how the lack of a demand model asymptotic at zero limits the applicability of the framework. Regardless, @gilroy2021zbe noted that both @hursh2008economic and @koff2015expt models cannot characterize demand at zero levels. 
 
-Absolute differences are much more straightforward and are not made relative. That is, error is difference from prediction regardless of scale. @gilroy2021zbe discussed this difference in the context of evaluating instances of demand that vary across orders. Specifically, error may become incomparable when fitting models to data that vary wildly across orders. For instance, data observed at high values (i.e., low prices) would theoretically have greater influences than those observed at low values (i.e, high prices) because differences close to zero have negligible influence in the absolute sense. This has led to occasionally inconsistencies between model fits between the log and linear forms of @hursh2008economic framework.
-
-## Zero Consumption and Lower Asymptotes
-
-Recent discussions on the inclusion of zero consumption values in operant demand have highlight issues with the lower asymptote in contemporary models [@gilroy2021zbe]. Specifically, both of the models described in @hursh2008economic and @koff2015expt cannot explicitly characterize demand at zero levels. Rather, each of these models has an upper asymptote defined by $Q_{0}$ and a lower asymptote defined by $Q_{0}$ and the span constant, $\textit{k}$. Regardless of the model, the asymptotes are defined as the following:
+Revisiting the topic of asymptotes, two novel terms are noted here: $A_{Upper}$ and $A_{Lower}$. The term $A_{Upper}$ refers to the upper, typically non-zero bound of the demand curve. In models derived from the @hursh2008economic framework, this is simply the fitted parameter $Q_{0}$. The term $A_{Lower}$ refers the lower bound of the demand curve, extending downward from $A_{Upper}$ at a distance equal to the span constant $\textit{k}$ [@gilroy2021zbe]. These limits are also noted below.
 
 \begin{equation}
 \begin{split} 
@@ -91,19 +87,9 @@ A_{Lower} &= 10^{log_{10}Q_0 - k}
 \end{split} 
 \end{equation}
 
-Given that these limits are defined on the log scale, it will not be possible to explicitly model zero and the lowest possible $\hat{y}$ will always at the non-zero lower asymptote. See the example notation below:
+The notation of $A_{Lower}$ make the difficulties characterizing demand 0 zero more apparent. That is, $\hat{y}$ in both the @hursh2008economic and @koff2015expt models can *never* take a value of 0 because the asymptotes are derived from a span cast into logarithmic space. As such, even as prices approach infinity $\hat{y}$ will never advance beyond $A_{Lower}$, i.e. $\displaystyle{\lim_{P \to \infty} f(x)= A_{Lower}}$. As such, fitted demand curve values can only take values between these two absolute limits, i.e. $\hat{y} \in [ A_{Lower}, A_{Upper} ]$.
 
-\begin{equation} 
-\displaystyle{\lim_{P \to \infty} f(x)= A_{Lower}}
-\end{equation} 
-
-In this framework, which applies equally to both the log and linear restatement of the @gilroy2021zbe, the predicted values can only fall within the interval between upper and lower limits, see below:
-
-\begin{equation} 
-\hat{y}\in [{A_{Lower}},{A_{Upper}}] 
-\end{equation} 
-
-The span parameter $\textit{k}$ in the original implementation was derived from range of non-zero consumption values. As such, the $A_{Upper}$ and $A_{Lower}$ limits reflect the observed, non-zero consumption at upper and lower extremes, respectively. This was necessarily the case in the original implementation of the @hursh2008economic framework because non-zero values were dropped from the analysis. This has the effect of halting the demand curve at the lowest observed non-zero consumption value. A visualization of this behavior is provided in \autoref{fig:fig1CurveSpanEmpirical}.
+Mention of the $A_{Lower}$ and $A_{Upper}$ limits highlight the relevance of the span parameter $\textit{k}$. Indeed, the @hursh2008economic framework uses a span parameter based on the range of *non-zero* consumption values because the range must exist in log units (i.e., why non-zero values were excluded). This has the effect of halting the demand curve at the lowest observed *non-zero* consumption value unless extended further by adding a constant (or fitting as a parameter). A visualization of the most basic behavior for the span parameter is provided in \autoref{fig:fig1CurveSpanEmpirical}.
 
 ```{r fig1CurveSpanEmpirical, fig.cap="Span of Demand Curve with Non-zero Consumption", warning=FALSE}
 
@@ -121,7 +107,7 @@ preFit <- data.frame(
         0)
 )
 
-kSet = log10(max(preFit$Q)) - log10(min(preFit$Q[preFit$Q>0]))
+kSet = log10(max(preFit$Q)) - log10(min(preFit$Q[preFit$Q > 0]))
 
 lowerAsymptote = 10^(log10(100) - kSet)
 
@@ -176,7 +162,7 @@ ggplot(preFit, aes(P, Q)) +
 
 ```
 
-Although this behavior is straightforward in the initial implementation, the span of the demand curve became a more complex issue when observed consumption was restated in the linear scale. That is, the span constant can be enlarged in an attempt to *approach* an $A_{Lower}$ limit slightly closer to 0. Originally noted in @gilroy2019exactsolve, manipulations to the span constant can be performed in instances when the observed range of non-zero consumption value in log-units does not reflect the range of consumption values regressed upon. For instance, such is the case when demand is not evaluated at $Q_{FREE}$ or when non-zero consumption values are included in the regression. In these circumstances, $A_{Upper}$ and $A_{Lower}$ are not well characterized by the upper and lower extremes of the non-zero consumption data. Focusing on the latter issue, extending the span to more closely approach 0, it is common practice to include a fixed constant. These increasingly large values increase the span of the demand curve in log units and their varying degrees of influence are illustrated in \autoref{fig:fig2CurveSpanEmpiricalMod}.
+Although the determination of the span constant is straightforward in the @hursh2008economic implementation, the role of the span constant grew more abstract when 0 values were included in the regression on the linear scale. That is, various teams fit the span parameter as a constant because the observed data alone to not project the span below the lowest non-zero value. As such, the span constant is often increased (e.g., a small constant is added) in an attempt to *drive* the $A_{Lower}$ closer to 0. This behavior was originally noted in @gilroy2019exactsolve, whereby modifications to the span constant are be performed in instances when the *observed* range of non-zero consumption value in log-units does not reflect the full range of demand being modeled. For instance, the range of the demand curve in log units may differ from the observed range when demand is not evaluated at $Q_{FREE}$ (i.e., $Q_0$ > highest observed consumption). Alternatively, researchers using the @koff2015expt model may fit $\textit{k}$ as a parameter in order to drive $A_{Lower}$ to a quantity nearer to zero. A visualization of this behavior is illustrated in \autoref{fig:fig2CurveSpanEmpiricalMod}.
 
 ```{r fig2CurveSpanEmpiricalMod, fig.cap="Span of Empirical Demand Curve with Vary Spans", warning=FALSE}
 
@@ -260,11 +246,11 @@ ggplot(preFit, aes(P, Q)) +
 
 ```
 
-The increasing of the span has two primary effects. First, the rate of change in elasticity is jointly reflected by parameter $\alpha$ and the span constant. As such, the rate of change in the model is predicated on the upper and lower limits. That is, the span constant reflects the rate of change, as a function of $P$, as $\hat{y}$ advances from $A_{Upper}$ to $A_{Lower}$. Second, the gap between $A_{Lower}$ and true zero decreases proportionally with a larger $\textit{k}$. As shown in \autoref{fig:fig2CurveSpanEmpiricalMod}, larger $\textit{k}$ more closely approach zero but $A_{Lower}$ can never be true zero in this approach.
+As illustrated in this figure, increasing the span (i.e., distance between $A_{Lower}$ and $A_{Upper}$) has two principal effects on the demand curve. First, the rate of change in elasticity is reflected by parameter $\alpha$ in conjunction with the span constant. As such, the rate of change in the model is predicated on these upper and lower limits and this quantity represents the rate of change, as a function of $P$, by which $\hat{y}$ advances from $A_{Upper}$ to $A_{Lower}$. Second, and specific to the @koff2015expt model, a gap exists between $A_{Lower}$ and zero. This gap decreases proportionally with each unit increase in the span parameter $\textit{k}$. This behavior is illustrated in \autoref{fig:fig2CurveSpanEmpiricalMod}, whereby larger $\textit{k}$ values result in a $A_{Lower}$ that more closely approaches zero. However, again, this curve can never reach true zero in this approach.
 
 ## Same Model, Different Error
 
-As noted in earlier works [@gilroy2021zbe, @koff2015expt], the various implementations of the @hursh2008economic framework differ primarily in how residual error is interpreted when optimizing model parameters. For all intents and purposes, both models function in the same manner. That is, the $A_{Upper}$ and $A_{Lower}$ exist in the same fashion because both the @hursh2008economic and @koff2015expt represent the span of the demand curve in log units. In cases where no zero-valued consumption is included in the regression, fits between the log and linear interpretations of the @hursh2008economic model provide similar estimates. Further, re-weighting of the the errors in the linear restatement (i.e., relative to $\hat{y}$) yields fits and estimates that are essentially identical to that of the log form. These fits are illustrated in an example data set in \autoref{fig:fig3ComparisonNonzeroRelativeError}.
+Although the varying implementations of the @hursh2008economic framework differ in how residual error is interpreted, both models function in the same manner. That is, the $A_{Upper}$ and $A_{Lower}$ exist and function in the same fashion because both the @hursh2008economic and @koff2015expt represent the span of the demand curve in log units. In cases where no zero-valued consumption is included in the regression, fits between the log and linear interpretations of the @hursh2008economic model provide similar estimates so long as error handling is comparable (i.e., both are relative). That is, re-weighting of the the errors in the linear restatement (i.e., relative to $\hat{y}$) yields fits and estimates that are nearly identical to that of the log form. Example fits are illustrated in \autoref{fig:fig3ComparisonNonzeroRelativeError}.
 
 ```{r fig3ComparisonNonzeroRelativeError, fig.cap="Comparable Model Fits with Comparable Error"}
 
@@ -457,11 +443,11 @@ preFit.g = preFit %>%
 
 ```
 
-Although the field is now more aware to the differences between relative vs. absolute error, relatively few researchers have discussed the importance of $A_{Lower}$ in the @hursh2008economic framework. This is particularly complex in the linear restatement, as zero valued consumption is often included in the regression despite an inability to characterize demand at zero. Rather, the implementation put forward in @koff2015expt minimizes the impact of zeroes on the log scale by capitalizing on the relatively small difference between $A_{Lower}$ and 0 on the linear scale. Pragmatically, most researchers care little for such a small amount of error, this raises an interesting argument of what is being considered "close enough" when handling 0 consumption values. 
+Although the literature better characterizes the impact of relative and absolute error, few researchers have focused on $A_{Lower}$ and its role in models derived from the @hursh2008economic framework. This is a particularly complex topic in the application of the linear restatement because 0 consumption values are typically included in the regression despite an inability to characterize demand at 0 levels. The implementation put forward in @koff2015expt minimizes the impact of zeroes on the log scale by capitalizing on the relatively small difference between $A_{Lower}$ and 0 on the linear scale when $\textit{k}$ values exceed that of the observed range. Pragmatically, most care little for such a small amount of error, this raises an interesting argument regarding the management of 0 values. That is, what is being considered *close enough* when accomodating 0 consumption values in demand curve analyses.
 
-For the sake of argument, let us say that the restatement of the @hursh2008economic framework put forward in @koff2015expt considers values at $A_{Lower}$ to be "close enough" to 0 to reasonably resemble consumption at such levels. That is, $A_{Lower}$ is consider approximate to 0 in this instance. Given that $A_{Lower}$ is considered close enough to zero (i.e., the difference is negligible), it should be no matter of significance to treat the observed 0 values as $A_{Lower}$. The result of the exponentiation of the terms of the @hursh2008economic model allows the regression to proceed (foregoing problematic log transforms) by treating consumption values at high prices (i.e., likely at or near zero) as if they took the value of $A_{Lower}$.
+For the sake of argument, let us say that the model introduced in @koff2015expt considers values at $A_{Lower}$ to be *close enough* to 0 to reasonably approximate consumption at such levels. That is, $A_{Lower}$ is considered sufficiently approximate to 0. Following this logic (i.e., this degree of difference is negligible), it stands to reason that treating 0 values as $A_{Lower}$ is appropriate because 1) it allows demand to be projected beyond observed non-zero levels and 2) it is close enough to 0 that absolute differences are minimal. As such, it stands to reason that one could simply replace the 0 values with $A_{Lower}$, a quantity easily derived from $Q_0$ and $\textit{k}$. 
 
-Consider the data in \autoref{fig:fig2CurveSpanEmpiricalMod}. In entirety, only the @koff2015expt would proceed under these conditions because of the problematic log transformation. However, holding the span parameter $k$ constant and replacing 0 values with $A_{Lower}$, the projections between @koff2015expt and the @hursh2008economic converge quite closely, see \autoref{fig:fig4ComparisonZeroRelative}. Even further, re-weighting the @hursh2008economic to absolute difference error produces an even closer approximation between the two, see \autoref{fig:fig4ComparisonZeroRelative} and see \autoref{tab:table1ComparisonZeroAbsolute}.
+Reconsidering the full data displayed \autoref{fig:fig2CurveSpanEmpiricalMod}, only the @koff2015expt model would proceed under these conditions because of how 0 values interact with log transformation. However, as noted above, 0 values can be replaced by an individually-set $A_{Lower}$ value and both the @koff2015expt and @hursh2008economic models converge quite closely in this case, see \autoref{fig:fig4ComparisonZeroRelative}. Furthermore, re-weighting the @hursh2008economic to absolute difference error produces an even closer approximation between the two that renders almost identical, see \autoref{fig:fig4ComparisonZeroRelative} and see \autoref{tab:table1ComparisonZeroAbsolute}.
 
 ```{r fig4ComparisonZeroRelative, warning=FALSE, fig.cap="Comparable Model Fits with Comparable Asymptotes"}
 
@@ -489,7 +475,13 @@ displayFrame %>%
 
 ```
 
-In the hypothetical data series modeled in \autoref{fig:fig4ComparisonZeroRelative}, fits with the original (relative and absolute error representations) and exponentiated forms of the @hursh2008economic framework provide highly similar fits when controlling for the $A_{Lower}$. That is, the approach put forward in @koff2015expt uses $A_{Lower}$ as a "close enough" proxy to zero and simply replacing 0 with $A_{Lower}$ in the @hursh2008economic implementation provides essentially the same fit. As indicated in \autoref{tab:table1ComparisonZeroAbsolute}, the projections between each of these implementations becomes even closer when the @hursh2008economic implementation is amended to treat differences in error as absolute. This is particularly relevant as when low values that differ slightly in absolute value differ greatly in relative value.
+The hypothetical data series modeled in \autoref{fig:fig4ComparisonZeroRelative} demonstrate highly similar fits when controlling for $A_{Lower}$ (i.e., a common lower bound). That is, the approach put forward in @koff2015expt uses $A_{Lower}$ as a *close enough* proxy to zero and functionally treats 0 values as $A_{Lower}$. When adapting this same logic to the @hursh2008economic implementation, this results in nearly the same fit. As indicated in \autoref{tab:table1ComparisonZeroAbsolute}, the projections between each of these implementations becomes even closer when the @hursh2008economic implementation is amended to treat differences in error as absolute.
+
+## Different Model, Same Limitations
+
+ 
+
+
 
 The considerable influence of near-zero values and relative error are described well in @koff2015expt. As noted in that work, the replacement of zero values with *arbitrary* constants led to wildly varying effects on fits using the @hursh2008economic framework. Indeed, most agree that constructing a common $A_{Lower}$ (e.g., for all demand series) with a small constant (e.g., 0.1, 0.01) is unfavorable. The authors highlight issues with applying an *arbitrary* constant to zero-valued consumption and used this logic to make a case for a restatement of the @hursh2008economic model in linear terms. The desire to include all data, zero-valued or not, is admirable and statistically desirable but two issues warrant noting in this approach. 
 
