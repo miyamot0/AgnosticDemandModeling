@@ -46,11 +46,13 @@ output            : papaja::apa6_pdf
 
 ```{r include = FALSE}
 
-library(kableExtra)
-library(knitr)
+library(beezdemand)
+library(dplyr)
 library(ggplot2)
 library(gridExtra)
-library("papaja")
+library(kableExtra)
+library(knitr)
+library(papaja)
 library(tidyverse)
 
 r_refs("r-references.bib")
@@ -74,7 +76,7 @@ Until most recently, all derivatives of the @hursh2008economic framework modeled
 
 ## Error Representation
 
-Issues with various methods of error representation are reviewed in @gilroy2021zbe. Briefly, changes in the log and linear scale are reflectely different. That is, changes in log space are relative while changes in the linear space are absolute. Relative error is typically more suited to evaluating changes across varying in an equal fashion (e.g., $\hat{y} = 1000$, $\hat{y} = 10$, $\hat{y} = 0.1$). In this way, relative difference is emphasized and this feature specifies how each piece of information is weighted in the model.
+Issues with various methods of error representation are reviewed in @gilroy2021zbe. Briefly, changes in the log and linear scale are reflected different. That is, changes in log space are relative while changes in the linear space are absolute. Relative error is typically more suited to evaluating changes across varying in an equal fashion (e.g., $\hat{y} = 1000$, $\hat{y} = 10$, $\hat{y} = 0.1$). In this way, relative difference is emphasized and this feature specifies how each piece of information is weighted in the model.
 
 Absolute differences are much more straightforward and are not made relative. That is, error is difference from prediction regardless of scale. @gilroy2021zbe discussed this difference in the context of evaluating instances of demand that vary across orders. Specifically, error may become incomparable when fitting models to data that vary wildly across orders. For instance, data observed at high values (i.e., low prices) would theoretically have greater influences than those observed at low values (i.e, high prices) because differences close to zero have negligible influence in the absolute sense. This has led to occasionally inconsistencies between model fits between the log and linear forms of @hursh2008economic framework.
 
@@ -489,64 +491,214 @@ displayFrame %>%
 
 In the hypothetical data series modeled in \autoref{fig:fig4ComparisonZeroRelative}, fits with the original (relative and absolute error representations) and exponentiated forms of the @hursh2008economic framework provide highly similar fits when controlling for the $A_{Lower}$. That is, the approach put forward in @koff2015expt uses $A_{Lower}$ as a "close enough" proxy to zero and simply replacing 0 with $A_{Lower}$ in the @hursh2008economic implementation provides essentially the same fit. As indicated in \autoref{tab:table1ComparisonZeroAbsolute}, the projections between each of these implementations becomes even closer when the @hursh2008economic implementation is amended to treat differences in error as absolute. This is particularly relevant as when low values that differ slightly in absolute value differ greatly in relative value.
 
-The considerable influence of near-zero values and relative error are described well in @koff2015expt. As noted in that work, the replacement of zero values with *arbitrary* constants led to wildly varying effects on fits using the @hursh2008economic framework. Indeed, most agree that constructing a common $A_{Lower}$ (e.g., for all demand series) with a small constant (e.g., 0.1, 0.01) is unfavorable. However, I have several reservations regarding the evaluations of 
-@koff2015expt
+The considerable influence of near-zero values and relative error are described well in @koff2015expt. As noted in that work, the replacement of zero values with *arbitrary* constants led to wildly varying effects on fits using the @hursh2008economic framework. Indeed, most agree that constructing a common $A_{Lower}$ (e.g., for all demand series) with a small constant (e.g., 0.1, 0.01) is unfavorable. The authors highlight issues with applying an *arbitrary* constant to zero-valued consumption and used this logic to make a case for a restatement of the @hursh2008economic model in linear terms. The desire to include all data, zero-valued or not, is admirable and statistically desirable but two issues warrant noting in this approach. 
 
+First, the evaluation of *arbitrary* constants is fundamentally at odds with how individual demand curves and span constants interact to determine the demand curve, see \autoref{fig:fig1CurveSpanEmpirical}. That is, $Q_{0}$ forms the basis for $A_{Upper}$ and the arbitrary constant (in log scale) differ from $A_{Lower}$ by several magnitudes. This is because $A_{Upper}$ and $A_{Lower}$ are jointly determined by individual-level parameters and the global span constant $k$. As such, replacing *all* zero values with a common constant simply does not provide a reasonable approximation of $A_{Upper}$.
 
-This poor performance makes good sense when viewed in light of \autoref{fig:fig1CurveSpanEmpirical}. That is, span of the demand curve 
-
-$A_{Upper}$ and $A_{Lower}$
-
-
-
-
-global lower constant
-
-replacement of zero values with an 
-
-
-
-
-of the linear model (including zero values) are nearly identical to fits of 
-
-TODO: Zero handling
-
-TODO: Zero replacement issues
-
-TODO: Whether exponentiation really solves the issues 
+Second, neither the @hursh2008economic nor the @koff2015expt models characterize demand at zero. Although the @hursh2008economic fails for obvious reasons, the limitations of the @koff2015expt approach are less self-evident. Specifically, regression in the @koff2015expt approach succeeds in the case of 0 value consumption because 0 values *are treated as* $A_{Lower}$, which is a bound determined by individual-level $Q_{0}$ values and the span parameter $k$. As such, this strategy succeeds because 0 values are approximated by individual-level $A_{Upper}$ bounds and because the absolute difference $A_{Upper}$ decreases by an order of magnitude for each unit increase in parameter $k$. As such, the @koff2015expt approach is essentially equivalent to using the @hursh2008economic with individually-derived constants and normally distributed error in the linear scale. However, this claim is not trivial and simulation and analysis is warranted to whether the two models differ in an appreciable manner.
 
 # Methods
 
-...
+## Data Generating Process
 
-## Simulated Participants
+A total of 500 hypothetical data series were simulated using software submitted to peer-review. Specifically, the *SimulateDemand* method included in the *beezdemand* R package [@kaplan2019r] was used to generate demand series data. The seed values and variance were consistent with those used in the @koff2015expt publication as the basis for this approach over the earlier @hursh2008economic model.
 
-...
+## Screening of Non-systematic Data Series
 
-## Materials
+The three criteria for systematic data outlined in @stein2015identification were applied to all hypothetical series. Specifically, individual series were screened for 1) bounce (i.e., local changes within an expected downward trend), 2) trend (i.e., molar changes within an expected downward trend), and reversals from zero (i.e., return of consumption at a higher price from 0 consumption at a lower price). Data were included in this methodological comparison so long as they met all three indicators of systematic demand data.
 
-...
+## Modeling Strategies
 
-## Procedures
+Three modeling strategies were evaluated in this simulation study. The core aim of these comparisons was to evaluate how both replacing 0 values with an individually-generated $A_{Lower}$ constant and altering the weighting of error influenced the correspondence between the @hursh2008economic and @koff2015expt models. The individual modeling strategies are listed below:
 
-...
+### Strategy 1 : @koff2015expt
 
-## Data analysis
+The @koff2015expt model was applied to eligible data series at the individual level. This model was fit using the *optim* package in the R Statistical Program [@R-base]. Initial starts were derived based on the respective data and parameters $Q_0$ and $\alpha$ were carried forward into the final comparisons. The span constant $k$ was estimated based on the empirical range of the data with an added constant (0.5) to extend slightly below the lowest non-zero point of consumption. The same span constant was used across all models.
 
-```{r eval=FALSE}
+### Strategy 2: @hursh2008economic Model (Relative Error)
 
-#We used `r cite_r("r-references.bib")` for all our analyses.
+The @hursh2008economic was adjusted to dynamically determine the $A_{Lower}$ bound during the optimization procedure. Specifically, a customized loss function was prepared for use with the *optim* method whereby all values of 0 were replaced by $A_{Lower}$. The source code necessary to reproduce this approach and calculation has been provided for public review by the author at [https://github.com/miyamot0/AgnosticDemandModeling](https://github.com/miyamot0/AgnosticDemandModeling). Respective parameters were derived consistent with that of the @koff2015expt model.
+
+### Strategy 3 : @hursh2008economic Model (Absolute Error)
+
+The @hursh2008economic was adjusted further to dynamically determine the $A_{Lower}$ as a replacement for zero and also represented error (i.e., loss) in the linear scale. That is, residual error was reflected by ($10^{\hat{y}} - 10^{y}$). This model and resulting parameters were handled in the same manner as the others.
+
+## Analytical Strategy
+
+Given that both the @hursh2008economic and @koff2015expt models emerge from the same framework...
+
+TODO: Equivalence test
+
+# Results
+
+```{r fig4, fig.cap="Comparisons of Modeling Strategies", fig.height=9}
+
+setparams <- vector(length = 4)
+setparams <- c(-2.5547, .702521, 1.239893, .320221, 3.096, 1.438231)
+names(setparams) <- c("alphalm", "alphalsd", "q0lm", "q0lsd", "k", "yvalssd")
+sdindex <- c(2.1978, 1.9243, 1.5804, 1.2465, 0.8104, 0.1751, 0.0380, 0.0270)
+x <- c(.1, 1, 3, 10, 30, 100, 300, 1000)
+
+set.seed(65535)
+
+nParticipants = 100
+
+sim <- SimulateDemand(nruns = nParticipants, setparams = setparams, sdindex = sdindex, x = x)
+
+dataSet = sim$simvalues
+
+passingFrame = beezdemand::CheckUnsystematic(dataSet)
+
+kSet = log10(max(dataSet$y)) - log10(min(dataSet$y[dataSet$y > 0])) + 0.5
+
+dataFramePrep = data.frame(
+  id      = 1:nParticipants,
+  q0.HS   = numeric(length = nParticipants),
+  q0.HSw  = numeric(length = nParticipants),
+  q0.Koff = numeric(length = nParticipants),
+  a.HS    = numeric(length = nParticipants),
+  a.HSw   = numeric(length = nParticipants),
+  a.Koff  = numeric(length = nParticipants),
+  K       = numeric(length = nParticipants)
+)
+
+###
+
+getEXPL <- function(Q, K, A, P) {
+  log(Q)/log(10) + K * (exp(-A * Q * P) - 1)
+}
+
+getEXPT <- function(Q, K, A, P) {
+  Q * 10^(K*(exp(-A * Q * P) - 1))
+}
+
+min.RSS.EXPT <- function(data, par) {
+  with(data, sum((getEXPT(par[1], kSet, 10^par[2], x) - y)^2))
+}
+
+min.RSS.EXPL <- function(data, par) {
+  newData = data
+  newAsymptote = 10^(log10(par[1]) - kSet)
+  newData[newData$y == 0, "y"] <- newAsymptote
+  newData$y <- log10(newData$y)
+
+  with(newData, sum((getEXPL(par[1], kSet, 10^par[2], x) - y)^2))
+}
+
+min.RSS.EXPL.aw <- function(data, par) {
+  newData = data
+  newAsymptote = 10^(log10(par[1]) - kSet)
+  newData[newData$y == 0, "y"] <- newAsymptote
+
+  newData$y <- log10(newData$y)
+  newData$ys   = getEXPL(par[1], kSet, 10^par[2], newData$x)
+  newData$err  = (10^newData$ys - 10^newData$y)^2
+
+  sum(newData$err)
+}
+
+###
+
+minQ0 = 0.01
+maxQ0 = 200
+
+for (id in 1:nParticipants) {
+
+  currentData = dataSet[dataSet$id == id, ]
+
+  dataFramePrep[id, "K"] = kSet
+
+  fit.Koff <- optim(par  = c(max(currentData$y), -3),
+                    fn   = min.RSS.EXPT,
+                    method = "L-BFGS-B",
+                    lower  = c(0.01, -5),
+                    upper  = c(max(currentData$y) * 1.25, 0),
+                    data = currentData)
+
+  dataFramePrep[id, c("q0.Koff", "a.Koff")] = fit.Koff$par
+
+  fit.HS   <- optim(par    = c(fit.Koff$par[1], fit.Koff$par[2]),
+                    fn     = min.RSS.EXPL,
+                    method = "L-BFGS-B",
+                    lower  = c(0.01, -5),
+                    upper  = c(max(currentData$y) * 1.25, 0),
+                    data   = currentData)
+
+  dataFramePrep[id, c("q0.HS", "a.HS")] = fit.HS$par
+
+  fit.HWa <- optim(par    = c(fit.HS$par[1], fit.HS$par[2]),
+                   fn     = min.RSS.EXPL.aw,
+                   method = "L-BFGS-B",
+                   lower  = c(0.01, -5),
+                   upper  = c(max(currentData$y) * 1.25, 0),
+                   data   = currentData)
+
+  dataFramePrep[id, c("q0.HSw", "a.HSw")] = fit.HWa$par
+}
+
+keepers = passingFrame %>%
+  filter(TotalPass == 3) %>%
+  select(id) %>%
+  pull()
+
+frameToAnalyze = dataFramePrep %>%
+  filter(id %in% keepers)
+
+par(mfrow = c(2, 2),
+    oma = c(0, 0, 0, 0))
+
+comps.base <- lm(q0.Koff ~ q0.HS, data = frameToAnalyze)
+plot(frameToAnalyze$q0.Koff ~ frameToAnalyze$q0.HS,
+     main = expression(A[LOWER]~ "with Relative Error"),
+     ylab = expression(Q[0] ~ "(Koffarnus et al., 2015)"),
+     ylim = c(0,100),
+     xlab = expression(Q[0] ~ "(Hursh et al., 2008)"),
+     xlim = c(0,100))
+abline(comps.base)
+
+comps.weight <- lm(q0.Koff ~ q0.HSw, data = frameToAnalyze)
+plot(frameToAnalyze$q0.Koff ~ frameToAnalyze$q0.HSw,
+     main = expression(A[LOWER]~"with Absolute Error"),
+     ylab = expression(Q[0] ~ "(Koffarnus et al., 2015)"),
+     ylim = c(0,100),
+     xlab = expression(Q[0] ~ "(Hursh et al., 2008)"),
+     xlim = c(0,100))
+abline(comps.weight)
+
+comps.base <- lm(a.Koff ~ a.HS, data = frameToAnalyze)
+plot(frameToAnalyze$a.Koff ~ frameToAnalyze$a.HS,
+     main = expression(A[LOWER]~"with Relative Error"),
+     ylab = expression(alpha~"(Koffarnus et al., 2015)"),
+     ylim = c(-5,0),
+     xlab = expression(alpha~"(Hursh et al., 2008)"),
+     xlim = c(-5,0))
+abline(comps.base)
+
+comps.weight <- lm(a.Koff ~ a.HSw, data = frameToAnalyze)
+plot(frameToAnalyze$a.Koff ~ frameToAnalyze$a.HSw,
+     main = expression(A[LOWER]~ "with Absolute Error"),
+     ylab = expression(alpha~"(Koffarnus et al., 2015)"),
+     ylim = c(-5,0),
+     xlab = expression(alpha~"(Hursh et al., 2008)"),
+     xlim = c(-5,0))
+abline(comps.weight)
 
 
 ```
 
-# Results
+The simulated data revealed a total of `r nrow(frameToAnalyze)` that met all criteria for systematic hypothetical purchase task data (from *N*=100). Scatterplot comparisons across each of the three modeling strategies are illustrated in \autoref{fig:fig4}. As illustrated in this figure, each of the three strategies differed with respect to their correspondence. 
 
-...
+## Strategy 1 vs. Strategy 2
+
+Comparisons between Strategy 1 and 2 revealed a significant correlation for $Q_0$ (r = 0.8955, t = 17.313, df = 74, p-value < 2.2e-16). Similarly, there was a significant correlation for $\alpha$ (r = 0.9344, t = 22.515, df = 74, p-value < 2.2e-16). Scatterplot visualization of these two strategie indicated that, overall, the two approaches generally corresponded to a non-trivial degree.
+
+## Strategy 1 vs. Strategy 3
+
+Comparisons between Strategy 2 and 3 revealed a perfect correlation for $Q_0$ (r = 1, t = 82678, df = 74, p-value < 2.2e-16). Similarly, there was also a near perfect correlation for $\alpha$ (r = 0.9999, t = 22.515, df = 74, p-value < 2.2e-16). Scatterplot visualization of these two strategie indicated that, overall, the two approaches corresponded near perfectly.
 
 # Discussion
 
-...
+The purpose of this technical report was to further explore the role of zero and non-zero asymptotes in two popular models of operant demand. Indeed, debate as to whether 0 consumption values contribute to the characterization of demand continue to date. 
 
 \newpage
 
