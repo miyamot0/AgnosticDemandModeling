@@ -34,7 +34,7 @@ tablelist         : yes
 footnotelist      : no
 linenumbers       : yes
 mask              : no
-draft             : no
+draft             : yes
 
 documentclass     : "apa7"
 csl               : "apa.csl"
@@ -499,7 +499,7 @@ x <- c(.1, 1, 3, 10, 30, 100, 300, 1000)
 
 set.seed(65535)
 
-nParticipants = 100
+nParticipants = 500
 
 sim <- SimulateDemand(nruns = nParticipants, setparams = setparams, sdindex = sdindex, x = x)
 
@@ -529,7 +529,7 @@ The @koff2015expt model (absolute error) was applied to simulated consumption da
 
 ### Strategy 2: @hursh2008economic Model (Relative Error)
 
-The @hursh2008economic model (relative error) was applied to simulated consumption data at the individual-level. During the fitting, 0 consumption values were replaced by a $A_{Lower}$ value generated dynamically based on parameter $Q_0$ and $\textit{k}$. That is, a customized loss function was prepared for use with the *optim* method. In efforts to maintain transparency, the source code necessary to reproduce this approach and these calculations have been posted  for public review by the author at [https://github.com/miyamot0/AgnosticDemandModeling](https://github.com/miyamot0/AgnosticDemandModeling). All other parameters were derived consistent with that of Strategy 1.
+The @hursh2008economic model (relative error) was applied to simulated consumption data at the individual-level. During the fitting, 0 consumption values were replaced by a $A_{Lower}$ value generated dynamically based on parameter $Q_0$ and $\textit{k}$. That is, a customized loss function was prepared for use with the *optim* method. In efforts to maintain transparency, the source code necessary to reproduce this approach and these calculations have been posted for public review in a GitHub repository managed by the corresponding author, see Author Note. All other parameters were derived consistent with that of Strategy 1.
 
 ### Strategy 3 : @hursh2008economic Model (Absolute Error)
 
@@ -541,7 +541,7 @@ Individual comparisons were prepared for both parameters $Q_0$ and $\alpha$ resu
 
 # Results
 
-```{r fig4, fig.cap="Comparisons of Modeling Strategies", fig.height=5.5}
+```{r fig4, fig.cap="Scatterplot Comparisons Resulting from Modeling Strategies", fig.height=7}
 
 dataFramePrep = data.frame(
   id      = 1:nParticipants,
@@ -673,7 +673,7 @@ abline(comps.weight)
 
 ```
 
-The simulated data revealed a total of `r nrow(frameToAnalyze)` that met all criteria for systematic hypothetical purchase task data (from *N*=100). Scatterplot comparisons across each of the three modeling strategies are illustrated in \autoref{fig:fig4}. As illustrated in this figure, each of the three strategies varied with respect to correspondence between strategies. 
+The data generating process produced a total of `r nrow(frameToAnalyze)` series that met all 3 criteria for systematic hypothetical purchase task data (from *N*=`r nParticipants`; `r round((nrow(frameToAnalyze)/nParticipants) * 100, 2)`%). The correspondence between parameter estimates are illustrated using scatterplot visualizations in \autoref{fig:fig4}. The relationships illustrated in \autoref{fig:fig4} indicates varying degrees of correspondence and correspondence between each of the strategies are discussed in greater detail below.
 
 ## Strategy 1 vs. Strategy 2
 
@@ -681,67 +681,52 @@ The simulated data revealed a total of `r nrow(frameToAnalyze)` that met all cri
 
 library(equivalence)
 
-print("Q0s")
-
 tost.1v2.q0 = tost(frameToAnalyze$q0.Koff, 
                    frameToAnalyze$q0.HS, 
                    epsilon = 1, 
                    conf.level = 0.9875,
                    paired = TRUE)
 
-str(summary(tost.1v2.q0))
-
 cor.1v2.q0 = cor.test(frameToAnalyze$q0.Koff, frameToAnalyze$q0.HS)
 
-# $p.value
-# $estimate
-# $statistic (t)
-# $parameter (df)
-#
-#
-
-print("As")
-tost(frameToAnalyze$a.Koff, 
-     frameToAnalyze$a.HS, 
-     epsilon = 1, 
-     conf.level = 0.9875,
-     paired = TRUE)
+tost.1v2.a = tost(frameToAnalyze$a.Koff, 
+                  frameToAnalyze$a.HS, 
+                  epsilon = 1, 
+                  conf.level = 0.9875,
+                  paired = TRUE)
 
 cor.1v2.a = cor.test(frameToAnalyze$a.Koff, frameToAnalyze$a.HS)
 ```
 
-An evaluation of the relationship between Strategy 1 and 2 revealed strong correlations for $Q_0$ (r = `r cor.1v2.q0$estimate`, t = `r cor.1v2.q0$statistic`, df = `r cor.1v2.q0$parameter`, *p* < `r cor.1v2.q0$p.value`) as well as for $\alpha$ (r = `r cor.1v2.a$estimate`, t = `r cor.1v2.a$statistic`, df = `r cor.1v2.a$parameter`, *p* < `r cor.1v2.a$p.value`). The results of TOSTs for $Q_0$ and $\alpha$ were non-significant (*p* = 0.244) and significant (*p* < 2.2e-16), respectively. That is, the results of the two strategies appeared to provide statistically equivalent estimates for $\alpha$ but not for $Q_0$.
+An evaluation of the relationship between Strategy 1 and 2 revealed strong correlations for $Q_0$ (r=`r cor.1v2.q0$estimate`, t=`r cor.1v2.q0$statistic`, df=`r cor.1v2.q0$parameter`, `r scales::pvalue(cor.1v2.q0$p.value, accuracy = .0125, add_p = TRUE)`) as well as for $\alpha$ (r=`r cor.1v2.a$estimate`, df=`r cor.1v2.a$parameter`, *p* < `r scales::pvalue(cor.1v2.a$p.value, accuracy = .0125, add_p = TRUE)`). The results of TOSTs for $Q_0$ and $\alpha$ were non-significant (`r scales::pvalue(tost.1v2.q0$tost.p.value, accuracy = .0125, add_p = TRUE)`) and significant (`r scales::pvalue(tost.1v2.a$tost.p.value, accuracy = .0125, add_p = TRUE)`), respectively. That is, the results of the two strategies appeared to provide statistically equivalent estimates for $\alpha$ but not for $Q_0$.
 
 ## Strategy 1 vs. Strategy 3
 
-```{r strat1vsstrat3, include=FALSE}
-### TODO: Addin in
+```{r strat1vsstrat3, include=TRUE}
 
-print("Q0s (w)")
-tost(frameToAnalyze$q0.Koff, 
-     frameToAnalyze$q0.HSw, 
-     epsilon = 1, 
-     conf.level = 0.9875,
-     paired = TRUE)
+tost.1v3.q0 = tost(frameToAnalyze$q0.Koff, 
+                   frameToAnalyze$q0.HSw, 
+                   epsilon = 1, 
+                   conf.level = 0.9875,
+                   paired = TRUE)
 
-cor.test(frameToAnalyze$q0.Koff, frameToAnalyze$q0.HSw)
+cor.1v3.q0 = cor.test(frameToAnalyze$q0.Koff, frameToAnalyze$q0.HSw)
 
-print("As (w)")
-tost(frameToAnalyze$a.Koff, 
-     frameToAnalyze$a.HSw, 
-     epsilon = 1, 
-     conf.level = 0.9875,
-     paired = TRUE)
+tost.1v3.a = tost(frameToAnalyze$a.Koff, 
+                  frameToAnalyze$a.HSw, 
+                  epsilon = 1, 
+                  conf.level = 0.9875,
+                  paired = TRUE)
 
-cor.test(frameToAnalyze$q0.Koff, frameToAnalyze$q0.HSw)
+cor.1v3.a = cor.test(frameToAnalyze$q0.Koff, frameToAnalyze$q0.HSw)
 
 ```
 
-Evaluations of the relationship between Strategy 2 and 3 revealed nearly perfect correlations for $Q_0$ (r = 1, t = 82678, df = 74, *p* < 2.2e-16) and $\alpha$ (r = 0.9999, t = 22.515, df = 74, *p* < 2.2e-16). Similarly, the results of TOSTs for $Q_0$ (*p* = 1) and $\alpha$ (*p* = 1) were significant overall. That is, the results of the two strategies appeared to produce statistically equivalent model parameters across both $Q_0$ and $\alpha$.
+Evaluations of the relationship between Strategy 2 and 3 revealed perfect correlations for $Q_0$ (r=`r cor.1v3.q0$estimate`, t=`r cor.1v3.q0$statistic`, df=`r cor.1v3.q0$parameter`, `r scales::pvalue(cor.1v3.q0$p.value, accuracy = .0125, add_p = TRUE)`) as well as for $\alpha$ (r=`r cor.1v3.a$estimate`, df=`r cor.1v3.a$parameter`, *p* < `r scales::pvalue(cor.1v3.a$p.value, accuracy = .0125, add_p = TRUE)`). Similarly, the results of TOSTs for $Q_0$ (`r scales::pvalue(tost.1v3.q0$tost.p.value, accuracy = .0125, add_p = TRUE)`) and $\alpha$ (`r scales::pvalue(tost.1v3.a$tost.p.value, accuracy = .0125, add_p = TRUE)`) were significant overall. That is, the results of the two strategies appeared to produce statistically equivalent model parameters across both $Q_0$ and $\alpha$.
 
 # Discussion
 
-The Operant Demand Framework is increasingly applied to various areas of clinical and significance [@hursh2013behavioral, @reed2013behavioral]. Furthermore, models of operant demand are increasingly support in a variety of statistical packages and tools [@kaplan2019r, gilroy2018demand]. Within each of these applications and tools, a variety of modeling options are available with few firm guidelines for determining which is best suited for each scenario. The purpose of this technical report was to review the pragmatic and mathematical underpinnings of two variants derived from the framework of @hursh2008economic--the Exponential [@hursh2008economic] and the Exponentiated [@koff2015expt] models of operant demand.
+The Operant Demand Framework is increasingly applied to various areas of clinical and significance [@hursh2013behavioral; @reed2013behavioral]. Furthermore, models of operant demand are increasingly support in a variety of statistical packages and tools [@kaplan2019r; @gilroy2018demand]. Within each of these applications and tools, a variety of modeling options are available with few firm guidelines for determining which is best suited for each scenario. The purpose of this technical report was to review the pragmatic and mathematical underpinnings of two variants derived from the framework of @hursh2008economic--the Exponential [@hursh2008economic] and the Exponentiated [@koff2015expt] models of operant demand.
 
 This report provides an in-depth review of how 0 consumption values have thus far been incorporated in evaluations of operant demand. That is, neither the Exponential and Exponentiated models may character demand at 0 and both are restricted to $A_{Lower}$ in the same manner. Furthermore, controlling for how error is minimized, fitting the Exponentiated model is statistically equivalent to optimizing the Exponential model using absolute error and replacing 0 values with $A_{Lower}$. Indeed, results of computer simulation and comparisons using a data generating process used in the @koff2015expt study confirm that the two models are essentially equivalent and that neither can characterize demand at 0, just at $A_{Lower}$.
 
@@ -759,3 +744,94 @@ The goal of this report is neither to discourage the use of the @koff2015expt no
 
 <div id="refs" custom-style="Bibliography"></div>
 \endgroup
+
+\newpage
+
+# Appendix
+
+Several proofs are provided here to illustrate how the upper and lower asymptotes are determined. Despite the shared mathematical basis, derivations of each are provided below.
+
+## Hursh & Silberburg (2008)
+
+### Proof of $A_{UPPER}$ at $P = 0$
+
+$$
+\begin{aligned}
+log_{10}A_{Upper} &= log_{10}Q_0 + k(e^{-\alpha * Q_0 * 0} - 1) \\
+ &= log_{10}Q_0 + k(e^{0} - 1) \\
+ &= log_{10}Q_0 + k(1 - 1) \\
+ &= log_{10}Q_0 + k(0) \\
+ &= log_{10}Q_0
+\end{aligned}
+$$
+
+Note: Euler's constant raised to the power of 0 is equal to a value of 1. This essentially zeroes out the $\textit{k}$ constant, leaving just the $Q_0$ parameter at 0 $P$ and below. Naturally, this value may be raised to the linear scale as follows: $10^{log_{10}Q_0} = Q_0$.
+
+### Proof of $A_{LOWER}$ at $\displaystyle{\lim_{P \to \infty} f(x)}$
+
+$$
+\begin{aligned}
+log_{10}A_{Lower} = \displaystyle{\lim_{P \to \infty} f(x) } &= log_{10}Q_0 + k(e^{-\alpha * Q_0 * \infty} - 1) \\
+ &= log_{10}Q_0 + k(e^{-\infty} - 1) \\
+ &= log_{10}Q_0 + k(0 - 1) \\
+ &= log_{10}Q_0 + k(-1) \\
+ &= log_{10}Q_0 - k \\
+\end{aligned}
+$$
+
+\begin{center}
+\textit{OR}
+\end{center}
+
+$$
+\begin{aligned}
+log_{10}A_{Lower} = log_{10}A_{Upper} - k
+\end{aligned}
+$$
+
+Note: Euler's constant raised to the power of $-\infty$ equates to a value of 0. That is, $e^{-\infty}=\frac{1}{e^\infty}=\frac{1}{\infty} \approx 0$. This is has effect of making the value in parenthesis equal to $-1$, which in turn results in the full subtraction of quantity $k$ from $log_{10}Q_0$. Similar to $A_{UPPER}$, this value may be raised to the linear scale as follows: $10^{log_{10}Q_0 - k}$.
+
+## Koffarnus et al. (2015)
+
+### Proof of $A_{UPPER}$ at $P = 0$
+
+$$
+\begin{aligned}
+A_{Upper} &= Q_0 * 10^{k(e^{-\alpha * Q_0 * 0} - 1)}  \\
+ &= Q_0 * 10^{k(e^{0} - 1)}  \\
+ &= Q_0 * 10^{k(1 - 1)}  \\
+ &= Q_0 * 10^{k(0)}  \\
+ &= Q_0 * 10^{0}  \\
+ &= Q_0 * 1  \\
+ &= Q_0  \\
+\end{aligned}
+$$
+
+Note: Euler's constant raised to the power of 0 is equal to a value of 1. This essentially zeroes out the $\textit{k}$ constant, leaving just the $Q_0$ parameter at 0 $P$ and below. Given that this value exists in the linear scale, the result is simply $Q_0$.
+
+### Proof of $A_{LOWER}$ at $\displaystyle{\lim_{P \to \infty} f(x)}$
+
+$$
+\begin{aligned}
+A_{Lower} = \displaystyle{\lim_{P \to \infty} f(x) } &= Q_0 * 10^{k(e^{-\alpha * Q_0 * \infty} - 1)}  \\
+ &= Q_0 * 10^{k(e^{-\infty} - 1)}  \\
+ &= Q_0 * 10^{k(0 - 1)}  \\
+ &= Q_0 * 10^{k(-1)}  \\
+ &= Q_0 * 10^{-k}  \\
+log_{10}A_{Lower} &= log_{10}Q_0 + (-k)  \\
+ &= log_{10}Q_0 - k  \\
+\end{aligned}
+$$
+
+\begin{center}
+\textit{OR}
+\end{center}
+
+$$
+\begin{aligned}
+log_{10}A_{Lower} = log_{10}A_{Upper} - k
+\end{aligned}
+$$
+
+Note: Euler's constant raised to the power of $-\infty$ equates to a value of 0. That is, $e^{-\infty}=\frac{1}{e^\infty}=\frac{1}{\infty} \approx 0$. This is has effect of making the value in parenthesis equal to $-1$, which in turn results in the full subtraction of quantity $k$ from $log_{10}Q_0$. Similar to $A_{UPPER}$, this value may be raised to the linear scale as follows: $10^{log_{10}Q_0 - k}$.
+
