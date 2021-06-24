@@ -1,5 +1,5 @@
 ---
-title             : "Split Hairs in the Operant Demand Framework: Clarifying Methods of Accomodating Zero in Demand Curve Analysis"
+title             : "Splitting Hairs in the Operant Demand Framework: Accomodating Zeroes in Demand Curve Analysis"
 shorttitle        : "Exponential Model"
 
 author: 
@@ -554,8 +554,6 @@ dataFramePrep = data.frame(
   K       = numeric(length = nParticipants)
 )
 
-###
-
 getEXPL <- function(Q, K, A, P) {
   log(Q)/log(10) + K * (exp(-A * Q * P) - 1)
 }
@@ -588,8 +586,6 @@ min.RSS.EXPL.aw <- function(data, par) {
 
   sum(newData$err)
 }
-
-###
 
 minQ0 = 0.01
 maxQ0 = 200
@@ -675,27 +671,34 @@ plot(frameToAnalyze$a.Koff ~ frameToAnalyze$a.HSw,
      xlim = c(-5,0))
 abline(comps.weight)
 
-
 ```
 
 The simulated data revealed a total of `r nrow(frameToAnalyze)` that met all criteria for systematic hypothetical purchase task data (from *N*=100). Scatterplot comparisons across each of the three modeling strategies are illustrated in \autoref{fig:fig4}. As illustrated in this figure, each of the three strategies varied with respect to correspondence between strategies. 
 
 ## Strategy 1 vs. Strategy 2
 
-```{r strat1vsstrat2, include=FALSE}
-
-### TODO: Addin in
+```{r strat1vsstrat2, include=TRUE}
 
 library(equivalence)
 
 print("Q0s")
-tost(frameToAnalyze$q0.Koff, 
-     frameToAnalyze$q0.HS, 
-     epsilon = 1, 
-     conf.level = 0.9875,
-     paired = TRUE)
 
-cor.test(frameToAnalyze$q0.Koff, frameToAnalyze$q0.HS)
+tost.1v2.q0 = tost(frameToAnalyze$q0.Koff, 
+                   frameToAnalyze$q0.HS, 
+                   epsilon = 1, 
+                   conf.level = 0.9875,
+                   paired = TRUE)
+
+str(summary(tost.1v2.q0))
+
+cor.1v2.q0 = cor.test(frameToAnalyze$q0.Koff, frameToAnalyze$q0.HS)
+
+# $p.value
+# $estimate
+# $statistic (t)
+# $parameter (df)
+#
+#
 
 print("As")
 tost(frameToAnalyze$a.Koff, 
@@ -704,10 +707,10 @@ tost(frameToAnalyze$a.Koff,
      conf.level = 0.9875,
      paired = TRUE)
 
-cor.test(frameToAnalyze$a.Koff, frameToAnalyze$a.HS)
+cor.1v2.a = cor.test(frameToAnalyze$a.Koff, frameToAnalyze$a.HS)
 ```
 
-An evaluation of the relationship between Strategy 1 and 2 revealed strong correlations for $Q_0$ (r = 0.8955, t = 17.313, df = 74, *p* < 2.2e-16) as well as for $\alpha$ (r = 0.9344, t = 22.515, df = 74, *p* < 2.2e-16). The results of TOSTs for $Q_0$ and $\alpha$ were non-significant (*p* = 0.244) and significant (*p* < 2.2e-16), respectively. That is, the results of the two strategies appeared to provide statistically equivalent estimates for $\alpha$ but not for $Q_0$.
+An evaluation of the relationship between Strategy 1 and 2 revealed strong correlations for $Q_0$ (r = `r cor.1v2.q0$estimate`, t = `r cor.1v2.q0$statistic`, df = `r cor.1v2.q0$parameter`, *p* < `r cor.1v2.q0$p.value`) as well as for $\alpha$ (r = `r cor.1v2.a$estimate`, t = `r cor.1v2.a$statistic`, df = `r cor.1v2.a$parameter`, *p* < `r cor.1v2.a$p.value`). The results of TOSTs for $Q_0$ and $\alpha$ were non-significant (*p* = 0.244) and significant (*p* < 2.2e-16), respectively. That is, the results of the two strategies appeared to provide statistically equivalent estimates for $\alpha$ but not for $Q_0$.
 
 ## Strategy 1 vs. Strategy 3
 
