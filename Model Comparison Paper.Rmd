@@ -742,7 +742,7 @@ The Operant Demand Framework is increasingly applied to various areas of clinica
 
 This report provides an in-depth review of how 0 consumption values have thus far been incorporated in evaluations of operant demand. That is, neither the Exponential and Exponentiated models may character demand at 0 and both are restricted to $A_{Lower}$ in the same manner. Furthermore, controlling for how error is minimized, fitting the Exponentiated model is statistically equivalent to optimizing the Exponential model using absolute error and replacing 0 values with $A_{Lower}$. Indeed, results of computer simulation and comparisons using a data generating process used in the @koff2015expt study confirm that the two models are essentially equivalent and that neither can characterize demand at 0, just at $A_{Lower}$.
 
-## On Splitting Hairs in Operant Demand
+## Splitting Hairs in Operant Demand Models
 
 The goal of this report is neither to discourage the use of the @koff2015expt nor sing the praises of the original @hursh2008economic model. Rather, this is written such that all of the referenced works have advanced the scope and breadth of the Operant Demand Framework. Indeed, strong preferences towards any specific model invite the potential for bias and researchers should carefully measure their analytical strategies against others based on how well they fit the research question(s). 
 
