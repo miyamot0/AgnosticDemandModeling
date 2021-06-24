@@ -65,6 +65,12 @@ set.seed(42)
 knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
 ```
 
+# TODO: Figure lines maj/min
+
+# TODO: Strips need blanking
+
+# TODO: Grayscale colors
+
 # Introduction
 
 Contemporary methods for evaluating the consumption of goods and services using the Operant Demand Framework draw heavily from the methodology proposed in @hursh2008economic. This framework and this methodology have passed through several iterations [@hursh1987linear], with the most recent form taking a non-linear shape and modeled around an exponential decay process [@hursh2008economic]. Beyond the @hursh2008economic model, specifically, more recent extensions of the this framework have explored variants that evaluate consumption on the linear [@koff2015expt] or other log-like scales [@gilroy2021zbe].
@@ -485,7 +491,7 @@ This brief example serves to highlight a core limitation of the @koff2015expt mo
 
 ## Planned Comparisons
 
-The purpose of this technical report was to clarify how prevailing models in the @hursh2008economic framework can be adjust functionally similarly in the presence of 0 consumption values by addressing $A_{LOWER}$ and error representation. The primary question of interest was whether parameter estimates derived from the @hursh2008economic and @koff2015expt models could be made statistically equivalent by addressing $A_{Lower}$ with the @hursh2008economic model.
+The purpose of this technical report was to clarify how prevailing models in the @hursh2008economic framework can be adjusted to functional similarly in the presence of 0 consumption values by addressing $A_{LOWER}$ and error representation. The primary question of interest was whether parameter estimates derived from the @hursh2008economic and @koff2015expt models could be made statistically equivalent by addressing $A_{Lower}$ with the @hursh2008economic model.
 
 # Methods
 
