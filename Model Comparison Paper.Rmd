@@ -128,26 +128,26 @@ ggplot(preFit, aes(P, Q)) +
            xend   = 0.1, 
            y      = 100, 
            yend   = lowerAsymptote,
-           colour = "red") +
+           colour = "gray") +
   annotate("text", 
            x     = 0.175, 
            y     = 55, 
            angle = 90,
            adj   = 0.5,
-           col   = "red",
+           col   = "gray",
            label = "Range of Non-zero Observed Consumption\r\nFrom Upper to Lower Asymptotes") +
   annotate("segment", 
            x      = 0.1, 
            xend   = 5000, 
            y      = lowerAsymptote, 
            yend   = lowerAsymptote,
-           colour = "red",
+           colour = "gray",
            lty    = 2) +
   annotate("text",
            x     = 25,
            y     = 10,
            adj   = 0.5,
-           col   = "red",
+           col   = "gray",
            parse = TRUE,
            label = paste("'Non-Zero Lower Bound at: ' * 10^{log[10]*Q[0]-k} * ' : ' *",
                          round(lowerAsymptote,2))) +
@@ -156,13 +156,13 @@ ggplot(preFit, aes(P, Q)) +
            xend   = 5000, 
            y      = max(preFit$Q), 
            yend   = max(preFit$Q),
-           colour = "red",
+           colour = "gray",
            lty    = 2) +
   annotate("text",
            x     = 25,
            y     = 95,
            adj   = 0.5,
-           col   = "red",
+           col   = "gray",
            label = paste("Non-Zero Upper Bound at Q0 : ",
                          round(max(preFit$Q),2))) +
   scale_x_log10(breaks = preFit$P,
@@ -581,7 +581,7 @@ Individual comparisons were prepared for both parameters $Q_0$ and $\alpha$ resu
 
 # Results
 
-```{r fig4, fig.cap="Scatterplot Comparisons Resulting from Modeling Strategies", fig.height=7}
+```{r fig5scatterplots, fig.cap="Scatterplot Comparisons Resulting from Modeling Strategies", fig.height=7}
 
 dataFramePrep = data.frame(
   id      = 1:nParticipants,
@@ -713,7 +713,7 @@ abline(comps.weight)
 
 ```
 
-The data generating process produced a total of `r nrow(frameToAnalyze)` series that met all 3 indicators of systematic purchase task data (from *N*=`r nParticipants`; `r round((nrow(frameToAnalyze)/nParticipants) * 100, 2)`%). The correspondence between parameter estimates was visualized using scatterplots and these are displayed in \autoref{fig:fig4}. Overall, the relationships illustrated in \autoref{fig:fig4} indicated varying degrees of correspondence between each of the different strategies. These results are presented in greater detail below.
+The data generating process produced a total of `r nrow(frameToAnalyze)` series that met all 3 indicators of systematic purchase task data (from *N*=`r nParticipants`; `r round((nrow(frameToAnalyze)/nParticipants) * 100, 2)`%). The correspondence between parameter estimates was visualized using scatterplots and these are displayed in \autoref{fig:fig5scatterplots}. Overall, the relationships illustrated in \autoref{fig:fig5scatterplots} indicated varying degrees of correspondence between each of the different strategies. These results are presented in greater detail below.
 
 ## Strategy 1 vs. Strategy 2
 
@@ -828,7 +828,7 @@ log_{10}A_{Upper} &= log_{10}Q_0 + k(e^{-\alpha * Q_0 * 0} - 1) \\
 \end{aligned}
 $$
 
-Note: Euler's constant raised to the power of 0 is equal to a value of 1. This essentially zeroes out the $\textit{k}$ constant, leaving just the $Q_0$ parameter at 0 $P$ and below. Naturally, this value may be raised to the linear scale as follows: $10^{log_{10}Q_0} = Q_0$.
+Note: Euler's constant raised to the power of 0 is equal to a value of 1. This essentially zeroes out the $\textit{k}$ constant, leaving just the $Q_0$ parameter at 0 $P$.
 
 ### $A_{LOWER}$ at $\displaystyle{\lim_{P \to \infty} f(x)}$
 
@@ -844,7 +844,7 @@ log_{10}A_{Lower} = \displaystyle{\lim_{P \to \infty} f(x) } &= log_{10}Q_0 + k(
 \end{aligned}
 $$
 
-Note: Euler's constant raised to the power of $-\infty$ equates to a value of 0. That is, $e^{-\infty}=\frac{1}{e^\infty}=\frac{1}{\infty} \approx 0$. This is has effect of making the value in parentheses equal to $-1$, which in turn results in the full subtraction of quantity $k$ from $log_{10}Q_0$. Similar to $A_{UPPER}$, this value may be raised to the linear scale as follows: $10^{log_{10}Q_0 - k}$.
+Note: Euler's constant raised to the power of $-\infty$ equates to a value of 0. That is, $e^{-\infty}=\frac{1}{e^\infty}=\frac{1}{\infty} \approx 0$. This is has effect of making the value in parentheses equal to $-1$, which in turn results in the full subtraction of quantity $k$ from $log_{10}Q_0$.
 
 ## Koffarnus et al. (2015) Proofs
 
@@ -862,8 +862,6 @@ A_{Upper} &= Q_0 * 10^{k(e^{-\alpha * Q_0 * 0} - 1)}  \\
 \end{aligned}
 $$
 
-Note: Euler's constant raised to the power of 0 is equal to a value of 1. This essentially zeroes out the $\textit{k}$ constant, leaving just the $Q_0$ parameter at 0 $P$ and below. Given that this value exists in the linear scale, the result is simply $Q_0$.
-
 ### $A_{LOWER}$ at $\displaystyle{\lim_{P \to \infty} f(x)}$
 
 $$
@@ -880,4 +878,3 @@ log_{10}A_{Lower} &= log_{10}Q_0 + (-k)  \\
 \end{aligned}
 $$
 
-Note: Euler's constant raised to the power of $-\infty$ equates to a value of 0. That is, $e^{-\infty}=\frac{1}{e^\infty}=\frac{1}{\infty} \approx 0$. This is has effect of making the value in parentheses equal to $-1$, which in turn results in the full subtraction of quantity $k$ from $log_{10}Q_0$. Similar to $A_{UPPER}$, this value may be raised to the linear scale as follows: $10^{log_{10}Q_0 - k}$.
