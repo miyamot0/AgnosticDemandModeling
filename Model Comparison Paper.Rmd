@@ -65,8 +65,6 @@ set.seed(42)
 knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
 ```
 
-# TODO: Strips need blanking
-
 # TODO: Grayscale colors
 
 # Introduction
@@ -169,6 +167,8 @@ ggplot(preFit, aes(P, Q)) +
                          round(max(preFit$Q),2))) +
   scale_x_log10(breaks = preFit$P,
                 labels = preFit$P) +
+  xlab("Unit Price") +
+  ylab("Consumption") +
   theme_bw() +
   theme(
     axis.line = element_line(colour = "black"),
@@ -260,6 +260,8 @@ ggplot(preFit, aes(P, Q)) +
            label = expression("K + 3: " ~ A[LOWER] == 0.0054)) +
   scale_x_log10(breaks = preFit$P,
                 labels = preFit$P) +
+  xlab("Unit Price") +
+  ylab("Consumption") +
   theme_bw() +
   theme(
     axis.line = element_line(colour = "black"),
@@ -350,9 +352,11 @@ preFit.trim = preFit.trim %>%
 preFit.trim = preFit.trim %>%
   gather(Model, Prediction, -Q, -P) 
 
-ggplot(preFit.trim, aes(P, Q, color = Model)) +
+ggplot(preFit.trim, aes(P, Q)) +
   #ggtitle("TODO: Add title") +
   geom_point(color = "black") +
+  xlab("Unit Price") +
+  ylab("Consumption") +
   geom_line(aes(P, Prediction)) +
   facet_wrap(~Model, ncol = 3) +
   scale_y_log10(breaks = c(1, 10, 100),
@@ -365,7 +369,8 @@ ggplot(preFit.trim, aes(P, Q, color = Model)) +
     panel.background = element_blank(),
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank(),
-    legend.position = "bottom"
+    legend.position = "bottom", 
+    strip.background.x = element_blank()
   )
 
 ```
@@ -482,7 +487,7 @@ Revisiting this point, consider the following logic. For the sake of argument, l
 
 ```{r fig4ComparisonZeroRelative, warning=FALSE, fig.cap="Comparable Model Fits with Comparable Asymptotes", fig.height=3}
 
-ggplot(preFit.g, aes(P, Q, color = Model)) +
+ggplot(preFit.g, aes(P, Q)) +
   geom_point() +
   geom_line(aes(P, Prediction)) +
   scale_x_log10(breaks = c(0.1, 10, 100, 1000, 10000),
@@ -492,6 +497,8 @@ ggplot(preFit.g, aes(P, Q, color = Model)) +
                 labels = c(0.001, 0.01, 0.1, 1, 10, 100),
                 limits = c(0.001, 100)) +
   facet_wrap(~Model, ncol = 3) +
+  xlab("Unit Price") +
+  ylab("Consumption") +
   theme_bw() +
   theme(
     axis.line = element_line(colour = "black"),
@@ -499,7 +506,8 @@ ggplot(preFit.g, aes(P, Q, color = Model)) +
     panel.background = element_blank(),
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank(),
-    legend.position = "bottom"
+    legend.position = "none", 
+    strip.background.x = element_blank()
   )
 
 ```
