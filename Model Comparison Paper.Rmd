@@ -761,9 +761,27 @@ In closing, future efforts in the Operant Demand Framework should be directed to
 
 Several proofs are provided here to illustrate how the upper and lower asymptotes are determined. Despite the shared mathematical basis, derivations of each are provided below.
 
-## Hursh & Silberburg (2008)
+## Modified Hursh & Silberburg (2008) Optimization (Relative Error)
 
-### Proof of $A_{UPPER}$ at $P = 0$
+$$
+e(n) = \begin{cases} 
+\hat{y} - log_{10}y         &    \mbox{if } y \not= 0 \\
+\hat{y} - log_{10}A_{LOWER} &    \mbox{if } y = 0 \\
+\end{cases}
+$$
+
+## Modified Hursh & Silberburg (2008) Optimization (Absolute Error)
+
+$$
+e(n) = \begin{cases} 
+10^{\hat{y}} - 10^{log_{10}y}         &    \mbox{if } y \not= 0 \\
+10^{\hat{y}} - 10^{log_{10}A_{LOWER}} &    \mbox{if } y = 0 \\
+\end{cases}
+$$
+
+## Hursh & Silberburg (2008) Proofs
+
+### $A_{UPPER}$ at $P = 0$
 
 $$
 \begin{aligned}
@@ -771,13 +789,14 @@ log_{10}A_{Upper} &= log_{10}Q_0 + k(e^{-\alpha * Q_0 * 0} - 1) \\
  &= log_{10}Q_0 + k(e^{0} - 1) \\
  &= log_{10}Q_0 + k(1 - 1) \\
  &= log_{10}Q_0 + k(0) \\
- &= log_{10}Q_0
+ &= log_{10}Q_0\\
+ A_{Upper} &= Q_0
 \end{aligned}
 $$
 
 Note: Euler's constant raised to the power of 0 is equal to a value of 1. This essentially zeroes out the $\textit{k}$ constant, leaving just the $Q_0$ parameter at 0 $P$ and below. Naturally, this value may be raised to the linear scale as follows: $10^{log_{10}Q_0} = Q_0$.
 
-### Proof of $A_{LOWER}$ at $\displaystyle{\lim_{P \to \infty} f(x)}$
+### $A_{LOWER}$ at $\displaystyle{\lim_{P \to \infty} f(x)}$
 
 $$
 \begin{aligned}
@@ -786,24 +805,16 @@ log_{10}A_{Lower} = \displaystyle{\lim_{P \to \infty} f(x) } &= log_{10}Q_0 + k(
  &= log_{10}Q_0 + k(0 - 1) \\
  &= log_{10}Q_0 + k(-1) \\
  &= log_{10}Q_0 - k \\
-\end{aligned}
-$$
-
-\begin{center}
-\textit{OR}
-\end{center}
-
-$$
-\begin{aligned}
-log_{10}A_{Lower} = log_{10}A_{Upper} - k
+ &= log_{10}A_{Upper} - k \\
+ A_{Lower} &= 10^{log_{10}A_{Upper} - k}
 \end{aligned}
 $$
 
 Note: Euler's constant raised to the power of $-\infty$ equates to a value of 0. That is, $e^{-\infty}=\frac{1}{e^\infty}=\frac{1}{\infty} \approx 0$. This is has effect of making the value in parentheses equal to $-1$, which in turn results in the full subtraction of quantity $k$ from $log_{10}Q_0$. Similar to $A_{UPPER}$, this value may be raised to the linear scale as follows: $10^{log_{10}Q_0 - k}$.
 
-## Koffarnus et al. (2015)
+## Koffarnus et al. (2015) Proofs
 
-### Proof of $A_{UPPER}$ at $P = 0$
+### $A_{UPPER}$ at $P = 0$
 
 $$
 \begin{aligned}
@@ -819,7 +830,7 @@ $$
 
 Note: Euler's constant raised to the power of 0 is equal to a value of 1. This essentially zeroes out the $\textit{k}$ constant, leaving just the $Q_0$ parameter at 0 $P$ and below. Given that this value exists in the linear scale, the result is simply $Q_0$.
 
-### Proof of $A_{LOWER}$ at $\displaystyle{\lim_{P \to \infty} f(x)}$
+### $A_{LOWER}$ at $\displaystyle{\lim_{P \to \infty} f(x)}$
 
 $$
 \begin{aligned}
@@ -830,18 +841,9 @@ A_{Lower} = \displaystyle{\lim_{P \to \infty} f(x) } &= Q_0 * 10^{k(e^{-\alpha *
  &= Q_0 * 10^{-k}  \\
 log_{10}A_{Lower} &= log_{10}Q_0 + (-k)  \\
  &= log_{10}Q_0 - k  \\
-\end{aligned}
-$$
-
-\begin{center}
-\textit{OR}
-\end{center}
-
-$$
-\begin{aligned}
-log_{10}A_{Lower} = log_{10}A_{Upper} - k
+ &= log_{10}A_{Upper} - k \\
+ A_{Lower} &= 10^{log_{10}A_{Upper} - k}
 \end{aligned}
 $$
 
 Note: Euler's constant raised to the power of $-\infty$ equates to a value of 0. That is, $e^{-\infty}=\frac{1}{e^\infty}=\frac{1}{\infty} \approx 0$. This is has effect of making the value in parentheses equal to $-1$, which in turn results in the full subtraction of quantity $k$ from $log_{10}Q_0$. Similar to $A_{UPPER}$, this value may be raised to the linear scale as follows: $10^{log_{10}Q_0 - k}$.
-
