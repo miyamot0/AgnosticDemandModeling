@@ -65,8 +65,6 @@ set.seed(42)
 knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
 ```
 
-# TODO: Grayscale colors
-
 # Introduction
 
 Contemporary methods for evaluating the consumption of goods and services using the Operant Demand Framework draw heavily from the methodology proposed in @hursh2008economic. This framework and this methodology have passed through several iterations [@hursh1987linear], with the most recent form taking a non-linear shape and modeled around an exponential decay process [@hursh2008economic]. Beyond the @hursh2008economic model, specifically, more recent extensions of the this framework have explored variants that evaluate consumption on the linear [@koff2015expt] or other log-like scales [@gilroy2021zbe].
@@ -128,26 +126,26 @@ ggplot(preFit, aes(P, Q)) +
            xend   = 0.1, 
            y      = 100, 
            yend   = lowerAsymptote,
-           colour = "gray") +
+           colour = "grey40") +
   annotate("text", 
            x     = 0.175, 
            y     = 55, 
            angle = 90,
            adj   = 0.5,
-           col   = "gray",
+           col   = "grey40",
            label = "Range of Non-zero Observed Consumption\r\nFrom Upper to Lower Asymptotes") +
   annotate("segment", 
            x      = 0.1, 
            xend   = 5000, 
            y      = lowerAsymptote, 
            yend   = lowerAsymptote,
-           colour = "gray",
+           colour = "grey40",
            lty    = 2) +
   annotate("text",
            x     = 25,
            y     = 10,
            adj   = 0.5,
-           col   = "gray",
+           col   = "grey40",
            parse = TRUE,
            label = paste("'Non-Zero Lower Bound at: ' * 10^{log[10]*Q[0]-k} * ' : ' *",
                          round(lowerAsymptote,2))) +
@@ -156,17 +154,18 @@ ggplot(preFit, aes(P, Q)) +
            xend   = 5000, 
            y      = max(preFit$Q), 
            yend   = max(preFit$Q),
-           colour = "gray",
+           colour = "grey40",
            lty    = 2) +
   annotate("text",
            x     = 25,
            y     = 95,
            adj   = 0.5,
-           col   = "gray",
+           col   = "grey40",
            label = paste("Non-Zero Upper Bound at Q0 : ",
                          round(max(preFit$Q),2))) +
-  scale_x_log10(breaks = preFit$P,
-                labels = preFit$P) +
+  scale_x_log10(breaks = c(preFit$P, 10000),
+                labels = c(preFit$P, 10000),
+                limits = c(0.1, 10000)) +
   xlab("Unit Price") +
   ylab("Consumption") +
   theme_bw() +
@@ -223,43 +222,51 @@ ggplot(preFit, aes(P, Q)) +
   geom_line(data = asymptoteFrame,
             aes(X, Y, color = K),
             inherit.aes = FALSE) +
+  scale_color_manual(values = c(
+    "K (Empirical)" = "grey80",
+    "K + 0.5"       = "grey60",
+    "K + 1"         = "grey40",
+    "K + 2"         = "grey20",
+    "K + 3"         = "grey0"
+  )) +
   annotate("text",
            x     = 100,
            y     = 90,
            adj   = 0,
-           col   = "red",
+           col   = "grey80",
            parse = TRUE,
            label = expression("K (Empirical): " ~ A[LOWER] == 5.442)) +
   annotate("text",
            x     = 100,
            y     = 75,
            adj   = 0,
-           col   = "orange",
+           col   = "grey60",
            parse = TRUE,
            label = expression("K + 0.5: " ~ A[LOWER] == 1.7209)) +
   annotate("text",
            x     = 100,
            y     = 60,
            adj   = 0,
-           col   = "green",
+           col   = "grey40",
            parse = TRUE,
            label = expression("K + 1: " ~ A[LOWER] == 0.5442)) +
   annotate("text",
            x     = 100,
            y     = 45,
            adj   = 0,
-           col   = "blue",
+           col   = "grey20",
            parse = TRUE,
            label = expression("K + 2: " ~ A[LOWER] == 0.0544)) +
   annotate("text",
            x     = 100,
            y     = 30,
            adj   = 0,
-           col   = "purple",
+           col   = "grey0",
            parse = TRUE,
            label = expression("K + 3: " ~ A[LOWER] == 0.0054)) +
-  scale_x_log10(breaks = preFit$P,
-                labels = preFit$P) +
+  scale_x_log10(breaks = c(preFit$P, 10000),
+                labels = c(preFit$P, 10000),
+                limits = c(0.1, 10000)) +
   xlab("Unit Price") +
   ylab("Consumption") +
   theme_bw() +
@@ -269,7 +276,7 @@ ggplot(preFit, aes(P, Q)) +
     panel.background = element_blank(),
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank(),
-    legend.position = "bottom"
+    legend.position = "none"
   )
 
 ```
@@ -357,7 +364,7 @@ ggplot(preFit.trim, aes(P, Q)) +
   geom_point(color = "black") +
   xlab("Unit Price") +
   ylab("Consumption") +
-  geom_line(aes(P, Prediction)) +
+  geom_line(aes(P, Prediction), color = "grey40") +
   facet_wrap(~Model, ncol = 3) +
   scale_y_log10(breaks = c(1, 10, 100),
                 labels = c(1, 10, 100),
@@ -489,7 +496,7 @@ Revisiting this point, consider the following logic. For the sake of argument, l
 
 ggplot(preFit.g, aes(P, Q)) +
   geom_point() +
-  geom_line(aes(P, Prediction)) +
+  geom_line(aes(P, Prediction), color = "grey40") +
   scale_x_log10(breaks = c(0.1, 10, 100, 1000, 10000),
                 labels = c(0.1, 10, 100, 1000, 10000),
                 limits = c(0.1, 10000)) +
