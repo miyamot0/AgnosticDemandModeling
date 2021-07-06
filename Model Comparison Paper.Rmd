@@ -805,13 +805,11 @@ This report provides an in-depth discussion and review of how 0 consumption valu
 
 The simulations performed in this study were designed to facilitate comparisons between the @hursh2008economic and @koff2015expt models when controlling for the common $A_{LOWER}$ and differences in how residual errors were weighted. The goal of these comparisons were to advance the argument that the Exponential [@hursh2008economic] and Exponentiated [@koff2015expt] models should not be so strongly distinguished. Indeed, it is quite trivial to arrive at statistically equivalent estimates in both approaches when the role of the span constant and $A_{LOWER}$ is understood as they relate to 0 consumption values. The results of computer simulations confirmed that the two approach provide statistically equivalent estimates when controlling for such differences. This is because, mathematically, the behavior of $A_{LOWER}$ is identical regardless of which approach is used. Given that neither approach can characterize demand at zero, $A_{LOWER}$ is the *best* approximation of 0 in these circumstances. As such, replacing 0 consumption values with respective $A_{LOWER}$ values results in estimates that are statistically equivalent across the Exponential and Exponentiated models. This argument is not presented with the intent of favoring any specific approach as the de facto standard or recommended default when applying methods from the Operant Demand Framework. Rather, the intent of this work is in revealing how these (often) opposing strategies are much more similar than they are different. Indeed, they are so similar that distinguishing the two only serves to observe the shared mathematical bases for each. That said, each approach has utility and future efforts should be directed towards improving the understanding the properties of the @hursh2008economic framework rather than reinforcing any stance, position, or bias towards a specific implementation.
 
-The final contribution of this work was in clarifying the common mathematical bases for the Exponential and Exponentiated models and highlight the ways in which the proponents of each approach have extended the Operant Demand Framework. That is, the proponents of each approach were successful in advancing both the utility and scope of the Operant Demand Framework. That is, the finding that the @hursh2008economic model can replicate the behavior of the @koff2015expt without exponentiation terms does not negate the contributions of the @koff2015expt approach. Indeed, the initiative of the @koff2015expt team warrants considerable praise even today because this led an initiative towards addressing the problematic issue of removing otherwise valid data. For decades, substantial portions of otherwise consumption data were never carried forward into analyses and it is unclear how these prior analyses would compare had these data been included. Regardless of whenever analysts have a preference for one approach or the other, it is clear that the Operant Demand Framework has been advanced by
-
-is better now that 0 consumption values are now available for formal analysis.
+The final contribution of this work was in clarifying the common mathematical bases for the Exponential and Exponentiated models and highlight the ways in which the proponents of each approach have extended the Operant Demand Framework. That is, the proponents of each approach were successful in advancing both the utility and scope of the Operant Demand Framework. That is, the finding that the @hursh2008economic model can replicate the behavior of the @koff2015expt without exponentiation terms does not negate the contributions of the @koff2015expt approach. Indeed, the initiative of the @koff2015expt team warrants considerable praise even today because this led an initiative towards addressing the problematic issue of removing otherwise valid data. For decades, substantial portions of otherwise consumption data were never carried forward into analyses and it is unclear how these prior analyses would compare had these data been included. Regardless of whenever analysts have a preference for one approach or the other, it is clear that the methods featured in Operant Demand Framework are better equipped now that 0 consumption values are considered in the analysis.
 
 ## Future Directions in Operant Demand
 
-In closing, future efforts in the Operant Demand Framework should be directed towards advancing the applicability and the generality of an Operant Behavioral Economic perspective and the Operant Demand Framework. Towards this end, the intent and mission of the original @koff2015expt study regarding 0 consumption values is as valid and true today as it was when first published. However, debate regarding model superiority (or inferiority) in the absence of formal tests does not enhance the Operant Demand Framework perspective in any appreciable manner. As such, the reader should be cautioned against thinking that any single model is inherently "true", "better", or otherwise superior in the absence of careful statistical evaluation. Indeed, future contributions may drop the reliance on the log scale [@gilroy2021zbe] or choose not to extend the framework altogether [@newman2020improved]. Regardless, such approaches and advances should be met with scientific scrutiny and cautious optimism rather than outright disregard.
+The future is promising for the Operant Demand Framework. This perspective and this framework currently reflects a range of consumption (and non-consumption) and efforts are underway to leverage multilevel modeling as a future extension [@kaplanMlm]. Indeed, various labs are working toward increasing the applicability and generality of this approach. Towards this end, the intent and mission of the original @koff2015expt study regarding 0 consumption values is as valid and valuable today as it was when this work was first published. However, debates regarding model superiority (or inferiority) in the absence of formal tests does not enhance the Operant Demand Framework and its methods in any appreciable manner. That said, the two approaches are functionally interchangeable the reader is cautioned against thinking that any single model is inherently "true", "better", or otherwise superior in the absence of careful statistical evaluation. That said, it is unclear whether the prevailing approach in the Operant Demand Framework will remain based on the framework presented in @hursh2008economic. Indeed, it is possible that future research could lead to deviating from the use of log scale [@gilroy2021zbe] or towards a different framework altogether [@newman2020improved]. Regardless of the where the future takes the Operant Demand Framework, future approaches and advances should be met with cautious optimism and consideration rather than outright disregard in favor what has come before.
 
 \newpage
 
@@ -836,18 +834,18 @@ Several proofs are provided here to illustrate how the upper and lower asymptote
 ## Modified Hursh & Silberburg (2008) Optimization (Relative Error)
 
 $$
-e(n) = \begin{cases} 
-\hat{y} - log_{10}y         &    \mbox{if } y \not= 0 \\
-\hat{y} - log_{10}A_{LOWER} &    \mbox{if } y = 0 \\
+e_i = \begin{cases} 
+\hat{y}_i - log_{10}y_i       &    \mbox{if } y_i \not= 0 \\
+\hat{y}_i - log_{10}A_{LOWER} &    \mbox{if } y_i = 0 \\
 \end{cases}
 $$
 
 ## Modified Hursh & Silberburg (2008) Optimization (Absolute Error)
 
 $$
-e(n) = \begin{cases} 
-10^{\hat{y}} - 10^{log_{10}y}         &    \mbox{if } y \not= 0 \\
-10^{\hat{y}} - 10^{log_{10}A_{LOWER}} &    \mbox{if } y = 0 \\
+e_i = \begin{cases} 
+10^{\hat{y}_i} - 10^{log_{10}y_i}       &    \mbox{if } y_i \not= 0 \\
+10^{\hat{y}_i} - 10^{log_{10}A_{LOWER}} &    \mbox{if } y_i = 0 \\
 \end{cases}
 $$
 
@@ -897,6 +895,7 @@ A_{Upper} &= Q_0 * 10^{k(e^{-\alpha * Q_0 * 0} - 1)}  \\
  &= Q_0 * 10^{0}  \\
  &= Q_0 * 1  \\
  &= Q_0  \\
+log_{10}A_{Upper} &= log_{10}Q_0  \\
 \end{aligned}
 $$
 
