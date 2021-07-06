@@ -1,5 +1,5 @@
 ---
-title             : "False Dilemmas in the Operant Demand Framework: Zero Values and Demand Curve Analysis"
+title             : "Unnecessary Model Distinctions in the Operant Demand Framework: A Review and Simulations of Zero Values in Demand Curve Analysis"
 shorttitle        : "Exponential Model"
 
 author: 
@@ -281,11 +281,11 @@ ggplot(preFit, aes(P, Q)) +
 
 ```
 
-\autoref{fig:fig2CurveSpanEmpiricalMod} illustrates how inflating the span constant affects $A_{Lower}$ and this has three appreciable effects on the demand curve. First, the rate of change in elasticity is jointly reflected by parameter $\alpha$ and the span of the demand curve [@gilroy2020interpretation]. Given that $\alpha$ is a unitless quantity, it covaries inversely with the size of the span constant. That is, relatively greater $\alpha$ values reflect rapid changes in $\hat{y}$ across prices and relatively lesser values reflecting gradual changes in $\hat{y}$ across prices. Second, $\textit{k}$ values (i.e., $k < \frac{e}{log(10)}$) influence both the span of the demand curve as well as the range of elasticity and inelasticity possible [@newman2020improved; @gilroy2019exactsolve]. That is, $\textit{k}$ values that do not permit a span of 1 log unit necessarily would restrict the range of possible elasticity values (i.e., analytic solutions for $P_{MAX}$ are not possible). Third, and most relevant to the @koff2015expt model, inflated $\textit{k}$ values serve to lessen the *absolute* difference between $A_{Lower}$ and true 0 on the linear scale. That is, this distance is *lessened* but $A_{Lower}$ will still be a non-zero value all the same. \autoref{fig:fig2CurveSpanEmpiricalMod} elegantly displays how this gap decreases proportionally with each unit increase in the span parameter $\textit{k}$.
+\autoref{fig:fig2CurveSpanEmpiricalMod} illustrates how inflating the span constant affects $A_{Lower}$ and this has three appreciable effects on the demand curve. First, the rate of change in elasticity is jointly reflected by parameter $\alpha$ and the span of the demand curve [@gilroy2020interpretation]. Given that $\alpha$ is a unitless quantity, it covaries inversely with the size of the span constant. That is, relatively greater $\alpha$ values reflect rapid changes in $\hat{y}$ across prices and relatively lesser values reflecting gradual changes in $\hat{y}$ across prices. Second, $\textit{k}$ values (i.e., $k < \frac{e}{log(10)}$) influence both the span of the demand curve as well as the range of elasticity and inelasticity possible [@newman2020improved; @gilroy2019exactsolve]. That is, $\textit{k}$ values that do not permit a span of 1 log unit necessarily would restrict the range of possible elasticity values (i.e., analytic solutions for $P_{MAX}$ are not possible). Third, and most relevant to the @koff2015expt model, inflated $\textit{k}$ values serve to lessen the difference between $A_{Lower}$ and 0. That is, the distance between $A_{Lower}$ and 0 is is *lessened*, but no $\textit{k}$ value could ever yield a span to reaches true 0. \autoref{fig:fig2CurveSpanEmpiricalMod} provides an elegant display of how this gap decreases proportionally with each unit increase in the span parameter $\textit{k}$.
 
-## Unhelpful Distinctions
+## Unnecessary Model Distinctions
 
-The sections above outline the many similarities and few differences between the two most commonly-used forms of the @hursh2008economic framework--the @hursh2008economic and @koff2015expt models. These two approaches differ in terms of optimization (i.e., minimization of residual error) but share identical limitations related to non-zero asymptotes. Regarding the first point, residual error and optimization, the two models can provide functionally identical results when error representation is made comparable. That is, re-weighting the errors (i.e., relative to $\hat{y}$) in the @koff2015expt model yields fits and estimates that can be nearly identical to that of the @hursh2008economic model *in the absence of 0 consumption value*, see \autoref{fig:fig3ComparisonNonzeroRelativeError}. However, it warrants noting that such cases are rare as there is little need to extend beyond the original implementation of the @hursh2008economic framework in the absence of 0 consumption data.
+The sections above outline the various similarities and few differences between two of the most commonly-used forms of the @hursh2008economic framework--the @hursh2008economic model and the @koff2015expt restatement of the @hursh2008economic model. Specifically, these two modeling strategies differ in terms of optimization (i.e., minimization of residual error) but share the limitations related to asymptotes. Regarding the first point, residual error and optimization, the two models can provide functionally identical results when the handling of residual error is made comparable. That is, re-weighting the errors (i.e., relative to $\hat{y}$) in the @koff2015expt model yields fits and estimates that can be nearly identical to that of the @hursh2008economic model *in the absence of 0 consumption value.* Alternatively, the @hursh2008economic model can be made to provide estimates comparable to the @koff2015expt model by adjusting residual error to be sensitive to the order of predicted consumption (e.g., $E_i = E_i * 10^{\hat{y}}$, $E_i=10^{\hat{y}}-10^{y}$). A visualization of inter-related arrangements are illustrated in \autoref{fig:fig3ComparisonNonzeroRelativeError}.
 
 ```{r fig3ComparisonNonzeroRelativeError, fig.cap="Comparable Model Fits with Comparable Error", fig.height=3, warning=FALSE}
 
@@ -366,9 +366,9 @@ ggplot(preFit.trim, aes(P, Q)) +
   ylab("Consumption") +
   geom_line(aes(P, Prediction), color = "grey40") +
   facet_wrap(~Model, ncol = 3) +
-  scale_y_log10(breaks = c(1, 10, 100),
-                labels = c(1, 10, 100),
-                limits = c(1, 100)) +
+  # scale_y_log10(breaks = c(1, 10, 100),
+  #               labels = c(1, 10, 100),
+  #               limits = c(1, 100)) +
   theme_bw() +
   theme(
     axis.line = element_line(colour = "black"),
@@ -486,25 +486,44 @@ preFit.g = preFit %>%
                           "Exponential (Absolute)"
                         )))
 
+preFit.point.1 <- data.frame(
+  P = c(0.1, 1,  2,  5,  10, 50, 100, 500, 1000, 5000),
+  Q = c(99.54077086,
+        95.52117752,
+        91.28456421,
+        79.88382452,
+        64.51709973,
+        16.3328254,
+        5.442004322,
+        0,
+        0,
+        0),
+  Model = "Exponentiated"
+)
+
+preFit.point.2 = preFit %>%
+  select(P, Q) %>%
+  mutate(Model = "Exponential (Absolute)")
+
+preFit.point.full = rbind(preFit.point.1,
+                          preFit.point.2)
+
 ```
 
-Regarding the second point, few have discussed $A_{Lower}$ and how this aspect of the demand curve varies when 0 consumption values are included in the analyses. This is a complex topic, especially in the linear restatement, because 0 consumption values are a quantity that cannot be predicted by either model. Further inspection of the @koff2015expt model and its behavior (including $\textit{k}$ as a fitted parameter) reveals that the optimization of this model functions by both minimizing residual error as well as the difference between $A_{LOWER}$ and true 0. This is done by inflating the span
+Regarding the second point, few have discussed $A_{Lower}$ and how this aspect of the demand curve influences results in models derived from the @hursh2008economic framework. This is a complex topic, especially so in the @koff2015expt restatement, because consumption values observed at 0 are a quantity that cannot be *predicted* by models that reflect the range of consumption in log units. In attempting to accommodate observed 0 values, modeling based on the @hursh2008economic framework must minimize *two* sources of error instead of one. That is, the modeling must minimize residual error (as typical) and minimize the distance between $A_{LOWER}$ and 0. For instance, an application of the @koff2015expt model where $\textit{k}$ is included as a fitted parameter simultaneously optimizes demand intensity, rates of change in elasticity, and a span constant (i.e., $A_{LOWER}$). As noted above, $A_{LOWER}$ is driven lower by inflating the span constant towards some non-zero number that is *reasonably* proximate to 0. Pragmatically, one could and would likely argue that such a small amount of error calls for little concern and advocates of the @koff2015expt strategy would likely note that $A_{Lower}$ could be considered *close enough* of an approximation of 0 consumption values to enable analyses of the complete data set.
 
-that extends beyond the non-zero range of consumption values. Regardless of the strategy, this is done to minimize the absolute distance between $A_{Lower}$ and 0 in the linear scale. Pragmatically, one could and would likely argue that such a small amount of error calls for little concern. That is, at $A_{Lower}$ would likely be considered *close enough* of an approximation of 0 consumption for most analysts.
+Revisiting logic around a *close enough* approximation of 0 consumption values, consider the following hypothetical. Let us say that the interpretation of a fitted @koff2015expt model optimizes such that values at $A_{Lower}$ are a *close enough* approximation of 0 to proceed with demand curve analyses using a complete data set that includes 0 consumption values. Following this logic (i.e., $A_{LOWER} \cong 0$), it stands to reason that treating sufficiently low $A_{LOWER}$ values and 0 consumption values *should* replicate the behavior of the @koff2015expt model. Assuming an inflated $\textit{k}$ parameter, similar or identical estimates should result because 1) $\hat{y}$ can be predicted beyond the range of observed non-zero levels and 2) and the resulting $A_{LOWER}$ should be *close enough* to 0 on the linear scale that differences between $A_{LOWER}$ and 0 would be considered negligible. Controlling for differences in terms of error representation, it stands to reason that the @hursh2008economic model would provide similar estimates had 0 consumption values been replaced by respective $A_{LOWER}$ values and error minimization been reflected in terms of absolute differences.
 
-Revisiting the point made above, consider the following scenario. Let us say that the interpretation of a fitted @koff2015expt model operates such that values at $A_{Lower}$ are a *close enough* approximation of 0 to proceed with demand curve analyses using a complete data set (i.e., including 0 consumption values). As such, considering the two approximate to one another, it stands to reason that inflating the span constant (beyond the range of non-zero consumption) for fitted demand curves and replacing 0 values with respective $A_{LOWER}$ limits would be equivalent. Assuming a sufficiently inflated $\textit{k}$ parameter, this approach should be equivalent because 1) $\hat{y}$ can be predicted well beyond observed non-zero levels and 2) and significantly inflated $\textit{k}$ parameters drive $A_{LOWER}$ close enough to true 0 on the linear scale that absolute differences are considered negligible. In such an arrangement, it stands to reason that the @koff2015expt model should perform in the same ways as the @hursh2008economic model, had errors been treated in terms of absolute difference and 0 consumption values treated as if they were $A_{Lower}$. Using this strategy, the full data set from \autoref{fig:fig1CurveSpanEmpirical} is fitted using the @koff2015expt model with the original data and the @hursh2008economic model with 0 consumption values replaced $A_{Lower}$. Specifically, the most inflated span and corresponding $A_{Lower}$ from \autoref{fig:fig2CurveSpanEmpiricalMod} were used in the optimization of each model, i.e. $A_{LOWER} = 10^{log{10}Q_0 - (k + 3)}$. The projections emerging from these fits are illustrated in \autoref{fig:fig4ComparisonZeroRelative}.
+In a demonstration of this modified @hursh2008economic approach, the full data set from \autoref{fig:fig1CurveSpanEmpirical} can fitted with an inflated $\textit{k}$ parameter and 0 consumption values are replaced with respective $A_{Lower}$ values. Specifically, the most inflated span and corresponding $A_{Lower}$ from \autoref{fig:fig2CurveSpanEmpiricalMod} were used in this example demonstration, i.e. $A_{LOWER} = 10^{log{10}Q_0 - (k + 3)}$. The results of this modified @hursh2008economic approach are illustrated along with the @koff2015expt approach are illustrated in \autoref{fig:fig4ComparisonZeroRelative}.
 
 ```{r fig4ComparisonZeroRelative, warning=FALSE, fig.cap="Comparable Model Fits with Comparable Asymptotes", fig.height=3}
 
-ggplot(preFit.g, aes(P, Q)) +
-  geom_point() +
+ggplot(subset(preFit.g, Model != "Exponential (Relative)"), aes(P, Q)) +
+  geom_point(data = preFit.point.full) +
   geom_line(aes(P, Prediction), color = "grey40") +
   scale_x_log10(breaks = c(0.1, 10, 100, 1000, 10000),
                 labels = c(0.1, 10, 100, 1000, 10000),
                 limits = c(0.1, 10000)) +
-  scale_y_log10(breaks = c(0.001, 0.01, 0.1, 1, 10, 100),
-                labels = c(0.001, 0.01, 0.1, 1, 10, 100),
-                limits = c(0.001, 100)) +
   facet_wrap(~Model, ncol = 3) +
   xlab("Unit Price") +
   ylab("Consumption") +
@@ -524,17 +543,22 @@ ggplot(preFit.g, aes(P, Q)) +
 ```{r table1ComparisonZeroAbsolute}
 
 displayFrame %>% 
+  select(-c(`Exponential.Relative`)) %>%
+  relocate(Exponentiated, .after = Q) %>%
+  mutate(`Q.Mod` = Q) %>%
+  mutate(Q = preFit.point.1$Q) %>%
+  relocate(`Exponential.Absolute`, .after = `Q.Mod`) %>%
   apa_table(., 
             digits  = 3,
             caption = "Comparison of Exponentiated and Absolute-Weighted Exponential Models")
 
 ```
 
-Across the three fitted models, the @hursh2008economic model adjusted to accommodate 0 consumption values (with and without relative error weighting) provided nearly identical fits to the @koff2015expt model. Furthermore, de-weighting the @hursh2008economic to minimize the absolute difference between residuals produced the closest approximation between the two, see \autoref{tab:table1ComparisonZeroAbsolute}. This short example serves to highlight several details that often go unnoticed when using the the @koff2015expt model. First, this model does not characterize demand at zero. Rather, an inflated $\textit{k}$ parameter to drive $A_{Lower}$ down to a region *close enough* to 0 that the absolute difference between true 0 and $\hat{y}$ is negligible. However, 0 values can never emerge from this model. Second, this approach is functionally identical to the @hursh2008economic model with 0 values replaced with a common $A_{Lower}$ value when residual errors are de-weighted (i.e., absolute). That is, controlling for the same span, both the @hursh2008economic and @koff2015expt will hit the same $A_{Lower}$ that cannot be zero.
+Across the fitted models, the @hursh2008economic model adjusted to accommodate 0 consumption values provided nearly identical fits to the @koff2015expt model, see \autoref{tab:table1ComparisonZeroAbsolute}. As such, this example highlights several details that are often unnoticed when using the @koff2015expt model. First, this model does not characterize demand at zero levels. Rather, an inflated $\textit{k}$ parameter to drives $A_{Lower}$ to a quantity *close enough* to 0 that the absolute difference between true 0 and $\hat{y}$ is negligible. This is the best that this approach can achieve because 0 values can never be predicted from this model. Second, this approach is functionally identical to the @hursh2008economic model when 0 values replaced with respective $A_{Lower}$ values and when residual errors are de-weighted (i.e., absolute). That is, controlling for the span, both the @hursh2008economic and @koff2015expt can achieve the same $A_{Lower}$ but neither can model zero.
 
 ## Planned Comparisons
 
-The purpose of this technical report was to clarify and to evaluate the dimensions along which both the @hursh2008economic and @koff2015expt models differ. Specifically, the shared mathematical basis between the two should theoretically allow for modifications wherein both provide equivalent estimates--even in the presence of 0 consumption values. The primary research question was whether parameter estimates derived from the @hursh2008economic and @koff2015expt models would be made statistically equivalent by 1) accommodating absolute error and 2) replacing 0 consumption values with $A_{Lower}$ when applying the @hursh2008economic model.
+The purpose of this review and report was to clarify and to evaluate the shared dimensions along which both the @hursh2008economic and @koff2015expt models vary. Specifically, the shared mathematical basis between the two should allow for modifications wherein both provide equivalent statistically estimates--even in the presence of 0 consumption values. The primary research question for this simulation study was to determine whether parameter estimates derived from the @hursh2008economic and @koff2015expt models would be statistically equivalent in a modified @hursh2008economic model that featured absolute error and were fitted when 0 consumption values were replaced with respective $A_{Lower}$ values.
 
 # Methods
 
@@ -562,31 +586,31 @@ kSet = log10(max(dataSet$y)) - log10(min(dataSet$y[dataSet$y > 0])) + 0.5
 
 ## Data Generating Process
 
-A total of `r nParticipants` hypothetical data series were simulated using peer-reviewed software previously submitted to peer-review [@kaplan2019r]. Specifically, the *SimulateDemand* method included in the *beezdemand* R package [@kaplan2019r] was used to simulate hypothetical hypothetical purchase task data. The seed values and variance used to generate these hypothetical purchase task data were identical to those that were used in original @koff2015expt study. This specific data generating process was used as the basis for comparisons with the @hursh2008economic model, given that the @koff2015expt simulation was designed to be simulate to the "messy" data frequently observed in "real-world" purchase tasks.
+A total of `r nParticipants` hypothetical data series were simulated using using the R Statistical Program [@R-base]. The specific syntax used to generate was included in an R package that was submitted to peer-review [@kaplan2019r]. Specifically, the *SimulateDemand* method included in the *beezdemand* R package [@kaplan2019r] was used to simulate hypothetical purchase task data that included a large composition of 0 consumption values. The seed values and variance used to generate these data were identical to those that were used in @koff2015expt. This specific data generating process was used as the basis for comparisons with the @hursh2008economic model given that the authors of the @koff2015expt study modeled their approach around the "messy" data frequently observed in "real-world" purchase tasks that are often conducted on crowdsourced platforms.
 
 ## Screening of Non-systematic Data Series
 
-The three criteria for systematic data outlined in @stein2015identification were applied to all hypothetical series. Specifically, individual series were screened for bounce, trend, and reversals from zero. The first criterion, bounce, refers to local changes within the *expected* downward trend across increasing prices. That is, it would be unexpected to see consumption increases immediately following a price increase. The second criterion, trend, refers to the molar change in consumption from the lowest to the highest price. That is, there is a certain amount of decrease expected across the full run of consumption across prices. Lastly, reversals from zero refer to the return of consumption at a higher price following the cessation of consumption at a lower price. Simulated data were carried forward into the final analysis so long as each series met all indicators of systematic hypothetical purchase task data.
+The three criteria for systematic data outlined in @stein2015identification were applied to all hypothetical series. Specifically, individual series were screened for *bounce*, *trend*, and *reversals from zero*. The first criterion, bounce, refers to local changes within an expected downward trend as a function of increasing price. That is, it would be unexpected to see consumption increases immediately following a price increase. The second criterion, trend, refers to the molar change in consumption from the lowest to the highest price. That is, there is a certain amount of decrease in consumption expected across the full domain of prices. Lastly, reversals from zero refer to the return of consumption at a higher price following the cessation of consumption at a lower price. Simulated data were carried forward into the final analysis so long as each series met all indicators of systematic hypothetical purchase task data.
 
 ## Modeling Strategies
 
-A total of 3 modeling strategies were evaluated. Each of the 3 approaches was referenced as a different strategy for conducting demand curve analysis when 0 consumption values were observed in the data. The core aim of each was to compare estimated parameters across each strategy to determine whether the various strategies provided statistically equivalent results. Each of the modeling strategies is listed below in greater detail.
+A total of 3 modeling approaches were evaluated. Each of the 3 approaches was referenced as a specific strategy for conducting demand curve analysis when 0 consumption values were observed in the data. The core aim of each was to conduct pairwise comparisons between estimated parameters and determine whether the various strategies provided statistically equivalent estimates. Each of the strategies are listed below in greater detail.
 
 ### Strategy 1: @koff2015expt Model
 
-The @koff2015expt model (absolute error) was fitted to simulated consumption data at the individual-level. The model was fit using the *optim* package in the R Statistical Program [@R-base] due to its considerable flexibility in performing ordinary least squares regression. Initial starts were derived based on the respective data for parameter $Q_0$ and $\alpha$ was estimated on the log scale to support more equal step sizes in the optimization steps. The span constant $k$ was derived from the empirical range of the full data set with an added constant (0.5) to extend below the lowest non-zero point of consumption, as is common practice [@kaplan2018understanding]. The same span constant was used across all models to ensure comparable estimates for $Q_0$ and $\alpha$.
+The @koff2015expt model (absolute error) was fitted to simulated consumption data at the individual-level. The model was fit using the *optim* package included in the R Statistical Program [@R-base] due to its considerable flexibility in performing ordinary least squares regression. Initial starts were derived based on the respective data for parameter $Q_0$ and $\alpha$ was estimated on the log scale to support more comparable step sizes in the optimization. The span constant $k$ was derived from the empirical range of the full data set with an added constant (0.5) to allow the span of the demand curve to extend below the lowest non-zero point of consumption, as is common practice [@kaplan2018understanding]. The same span constant was used across all models to enable consistent comparisons between $Q_0$ and $\alpha$.
 
 ### Strategy 2: @hursh2008economic Model (Relative Error)
 
-The @hursh2008economic model (relative error) was also fitted to simulated consumption data at the individual-level. During the fitting, 0 consumption values were replaced by an $A_{Lower}$ value that was generated dynamically based on parameters $Q_0$ and $\textit{k}$. That is, a customized loss function was prepared for use with the *optim* method. Consistent with efforts to main open and transparent science [@gilroy2019furthering], the source code necessary to reproduce this approach and these calculations has been posted for public review in a GitHub repository managed by the corresponding author, see Author Note. All other parameters were derived consistent with that of Strategy 1.
+The @hursh2008economic model (relative error) was fitted to simulated consumption data at the individual-level. During the fitting, 0 consumption values were replaced by an $A_{Lower}$ value that was generated dynamically based on parameters $Q_0$ and $\textit{k}$. That is, a customized loss function was prepared for use with the *optim* method. Consistent with efforts to maintain open and transparent science [@gilroy2019furthering], the source code necessary to reproduce this approach and this report has been posted for public review in a GitHub repository managed by the corresponding author, see Author Note. All other parameters were derived consistent with Strategy 1.
 
 ### Strategy 3: @hursh2008economic Model (Absolute Error)
 
-The @hursh2008economic model (absolute error) was fitted to simulated consumption data at the individual-level as well. This strategy was identical to Strategy 2 with the exception of how loss was interpreted during optimization. That is, a customized loss function was prepared and residual error was represented in terms of absolute differences, i.e. $(10^{\hat{y}} - 10^{y})^2$. All other parameters were derived consistent with that of Strategies 1 and 2.
+The @hursh2008economic model (absolute error) was fitted to simulated consumption data at the individual-level as well. This strategy was identical to Strategy 2 with the exception of how loss (i.e., residual error) was interpreted during optimization. That is, a customized loss function was prepared and residual error was represented in terms of absolute differences, i.e. $(10^{\hat{y}} - 10^{y})^2$. All other parameters were derived consistent with that of Strategies 1 and 2.
 
 ## Analytical Strategy
 
-Individual comparisons were prepared for both parameters $Q_0$ and $\alpha$ resulting from each of the 3 strategies. Given that both the @hursh2008economic and @koff2015expt models emerge from the same framework, tests of equivalence were performed in a pairwise fashion (i.e., Strategy 1 vs. 2, Strategy 1 vs. 3). The *tost* method in the *equivalence* R package [@robinson2016package] was used to perform two one-sided t-tests (TOSTs) with paired estimates resulting from each strategy. That is, the focus was not on determining difference between strategies but instead on determining *equivalence* between strategies and fitted estimates. Across all tests, corrections were applied due to presence of repeated comparisons, i.e. $p=0.05/4=0.0125$.
+Pairwise comparisons were conducted for parameters $Q_0$ and $\alpha$ resulting from each of the three strategies. Tests of equivalence were performed in a pairwise fashion (i.e., Strategy 1 vs. 2, Strategy 1 vs. 3) to evaluate estimates resulting from the @koff2015expt model and two modified forms of the @hursh2008economic model. The *tost* method in the *equivalence* R package [@robinson2016package] was used to perform two one-sided t-tests (TOSTs) with paired estimates resulting from each strategy. That is, the focus was not on determining *difference* between strategies but instead on determining *equivalence* between them. Across all tests, corrections were applied due to presence of repeated comparisons, i.e. $p=0.05/4=0.0125$.
 
 # Results
 
@@ -722,7 +746,7 @@ abline(comps.weight)
 
 ```
 
-The data generating process yielded a total of `r nrow(frameToAnalyze)` series that met all 3 indicators of systematic purchase task data (from *N*=`r nParticipants`; `r round((nrow(frameToAnalyze)/nParticipants) * 100, 2)`%). The correspondence between parameter estimates was visualized in scatter plots and these are displayed in \autoref{fig:fig5scatterplots}. Overall, the observed relationships indicated varying degrees of correspondence between each of the different strategies. These results are presented in greater detail below.
+The data generating process yielded a total of `r nrow(frameToAnalyze)` series that met all 3 indicators of systematic purchase task data (from *N*=`r nParticipants`; `r round((nrow(frameToAnalyze)/nParticipants) * 100, 2)`%). The correspondence between parameter estimates was visualized in scatter plots and these relationships are displayed in \autoref{fig:fig5scatterplots}. Overall, there was varying degrees of correspondence between each of the different strategies and the results of pairwise comparisons are presented below.
 
 ## Strategy 1 vs. Strategy 2
 
@@ -775,7 +799,9 @@ Evaluations of the relationship between Strategy 2 and 3 revealed perfect correl
 
 # Discussion
 
-The Operant Demand Framework is increasingly applied to various issues of clinical and societal significance [@hursh2013behavioral; @reed2013behavioral]. Indeed, such methods and analyses have merit in informing various areas of public policy [@hursh2013behavioral; @roma2017progress]. Furthermore, formal models of operant demand are increasingly supported across a range of mature statistical packages and tools [@kaplan2019r; @gilroy2018demand]. Within these applications and tools, various modeling strategies are available to researchers with few firm guidelines to assist analysts in navigating among these options. The purpose of this technical report was to review the pragmatic and mathematical underpinnings of the two prevailing models derived from the framework of @hursh2008economic--the @hursh2008economic (Exponential) and the @koff2015expt (Exponentiated) models. The goals of this report were three-fold: First, one of the goals of this report was to review and characterize the behavior of the lower limit ($A_{LOWER}$) for both the Exponential and Exponentiated models as this relates to both the presence and absence of 0 consumption values. Second, and building from the first, another goal was to evaluate whether the @hursh2008economic model could be adjusted to provide equivalent estimates to the @koff2015expt model when addressing $A_{LOWER}$ and controlling for differences in error weighting. The third and final goal was to clarify the shared mathematical basis for each model and affirm the ways in which each of the models reviewed here have extended the Operant Demand Framework.
+The Operant Demand Framework has become a popular avenue for
+
+is increasingly applied to various issues of clinical and societal significance [@hursh2013behavioral; @reed2013behavioral]. Indeed, such methods and analyses have merit in informing various areas of public policy [@hursh2013behavioral; @roma2017progress]. Furthermore, formal models of operant demand are increasingly supported across a range of mature statistical packages and tools [@kaplan2019r; @gilroy2018demand]. Within these applications and tools, various modeling strategies are available to researchers with few firm guidelines to assist analysts in navigating among these options. The purpose of this technical report was to review the pragmatic and mathematical underpinnings of the two prevailing models derived from the framework of @hursh2008economic--the @hursh2008economic (Exponential) and the @koff2015expt (Exponentiated) models. The goals of this report were three-fold: First, one of the goals of this report was to review and characterize the behavior of the lower limit ($A_{LOWER}$) for both the Exponential and Exponentiated models as this relates to both the presence and absence of 0 consumption values. Second, and building from the first, another goal was to evaluate whether the @hursh2008economic model could be adjusted to provide equivalent estimates to the @koff2015expt model when addressing $A_{LOWER}$ and controlling for differences in error weighting. The third and final goal was to clarify the shared mathematical basis for each model and affirm the ways in which each of the models reviewed here have extended the Operant Demand Framework.
 
 Regarding the first point, this report provides an in-depth discussion and review of how 0 consumption values have, thus far, been included in models derived from the @hursh2008economic framework. In sum, neither the Exponential nor the Exponentiated models characterize demand at 0. Both are equally restricted to the same non-zero lower asymptote, $A_{Lower}$, which can never be 0. Regardless of whether 0 consumption values are included in the regression, this mathematically cannot succeed as currently specified in the @hursh2008economic framework. As such, it warrants re-stating that the approach put forward in @koff2015expt is not a complete solution for including *and characterizing* 0 consumption values with the @hursh2008economic framework. As an alternative, others have presented alternative means of achieving a zero asymptote if such behavior is necessary to answer specific research questions [@gilroy2021zbe].
 
