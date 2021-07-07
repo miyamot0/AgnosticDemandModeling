@@ -600,6 +600,8 @@ A total of 3 modeling approaches were evaluated. Each of the 3 approaches was re
 
 The @koff2015expt model (absolute error) was fitted to simulated consumption data at the individual-level. The model was fit using the *optim* package included in the R Statistical Program [@R-base] due to its considerable flexibility in performing ordinary least squares regression. Initial starts were derived based on the respective data for parameter $Q_0$ and $\alpha$ was estimated on the log scale to support more comparable step sizes in the optimization. The span constant $k$ was derived from the empirical range of the full data set with an added constant (0.5) to allow the span of the demand curve to extend below the lowest non-zero point of consumption, as is common practice [@kaplan2018understanding]. The same span constant was used across all models to enable consistent comparisons between $Q_0$ and $\alpha$.
 
+### TODO: Strategy 2 Micky Relative: 
+
 ### Strategy 2: @hursh2008economic Model (Relative Error)
 
 The @hursh2008economic model (relative error) was fitted to simulated consumption data at the individual-level. During the fitting, 0 consumption values were replaced by an $A_{Lower}$ value that was generated dynamically based on parameters $Q_0$ and $\textit{k}$. That is, a customized loss function was prepared for use with the *optim* method. Consistent with efforts to maintain open and transparent science [@gilroy2019furthering], the source code necessary to reproduce this approach and this report has been posted for public review in a GitHub repository managed by the corresponding author, see Author Note. All other parameters were derived consistent with Strategy 1.
@@ -614,17 +616,19 @@ Pairwise comparisons were conducted for parameters $Q_0$ and $\alpha$ resulting 
 
 # Results
 
-```{r fig5scatterplots, fig.cap="Scatterplot Comparisons Resulting from Modeling Strategies", fig.height=7}
+```{r fig5scatterplots, fig.cap="Scatterplot Comparisons: Koffarnus et al. (Absolute)", fig.height=7}
 
 dataFramePrep = data.frame(
-  id      = 1:nParticipants,
-  q0.HS   = numeric(length = nParticipants),
-  q0.HSw  = numeric(length = nParticipants),
-  q0.Koff = numeric(length = nParticipants),
-  a.HS    = numeric(length = nParticipants),
-  a.HSw   = numeric(length = nParticipants),
-  a.Koff  = numeric(length = nParticipants),
-  K       = numeric(length = nParticipants)
+  id       = 1:nParticipants,
+  q0.HS    = numeric(length = nParticipants),
+  q0.HSw   = numeric(length = nParticipants),
+  q0.Koff  = numeric(length = nParticipants),
+  q0.Koffw = numeric(length = nParticipants),
+  a.HS     = numeric(length = nParticipants),
+  a.HSw    = numeric(length = nParticipants),
+  a.Koff   = numeric(length = nParticipants),
+  a.Koffw  = numeric(length = nParticipants),
+  K        = numeric(length = nParticipants)
 )
 
 getEXPL <- function(Q, K, A, P) {
@@ -637,6 +641,16 @@ getEXPT <- function(Q, K, A, P) {
 
 min.RSS.EXPT <- function(data, par) {
   with(data, sum((getEXPT(par[1], kSet, 10^par[2], x) - y)^2))
+}
+
+min.RSS.EXPT.aw <- function(data, par) {
+  newData = data
+
+  newData$ys   = getEXPT(par[1], kSet, 10^par[2], newData$x)
+  newData$err  = (newData$ys - newData$y)^2
+  newData$err  = newData$err * (newData$ys)
+
+  sum(newData$err)
 }
 
 min.RSS.EXPL <- function(data, par) {
@@ -677,7 +691,16 @@ for (id in 1:nParticipants) {
                     data = currentData)
 
   dataFramePrep[id, c("q0.Koff", "a.Koff")] = fit.Koff$par
+  
+  fit.Koffa <- optim(par   = c(max(currentData$y), -3),
+                    fn     = min.RSS.EXPT.aw,
+                    method = "L-BFGS-B",
+                    lower  = c(0.01, -5),
+                    upper  = c(max(currentData$y) * 1.25, 0),
+                    data   = currentData)
 
+  dataFramePrep[id, c("q0.Koffw", "a.Koffw")] = fit.Koffa$par
+  
   fit.HS   <- optim(par    = c(fit.Koff$par[1], fit.Koff$par[2]),
                     fn     = min.RSS.EXPL,
                     method = "L-BFGS-B",
@@ -737,6 +760,49 @@ abline(comps.base)
 
 comps.weight <- lm(a.Koff ~ a.HSw, data = frameToAnalyze)
 plot(frameToAnalyze$a.Koff ~ frameToAnalyze$a.HSw,
+     main = expression(A[LOWER]~ "with Absolute Error"),
+     ylab = expression(alpha~"(Koffarnus et al., 2015)"),
+     ylim = c(-5,0),
+     xlab = expression(alpha~"(Hursh et al., 2008)"),
+     xlim = c(-5,0))
+abline(comps.weight)
+
+```
+
+```{r fig5scatterplots2, fig.cap="Scatterplot Comparisons: Koffarnus et al. (Relative)", fig.height=7}
+
+par(mfrow = c(2, 2),
+    oma = c(0, 0, 0, 0))
+
+comps.base <- lm(q0.Koffw ~ q0.HS, data = frameToAnalyze)
+plot(frameToAnalyze$q0.Koffw ~ frameToAnalyze$q0.HS,
+     main = expression(A[LOWER]~ "with Relative Error"),
+     ylab = expression(Q[0] ~ "(Koffarnus et al., 2015)"),
+     ylim = c(0,100),
+     xlab = expression(Q[0] ~ "(Hursh et al., 2008)"),
+     xlim = c(0,100))
+abline(comps.base)
+
+comps.weight <- lm(q0.Koffw ~ q0.HSw, data = frameToAnalyze)
+plot(frameToAnalyze$q0.Koffw ~ frameToAnalyze$q0.HSw,
+     main = expression(A[LOWER]~"with Absolute Error"),
+     ylab = expression(Q[0] ~ "(Koffarnus et al., 2015)"),
+     ylim = c(0,100),
+     xlab = expression(Q[0] ~ "(Hursh et al., 2008)"),
+     xlim = c(0,100))
+abline(comps.weight)
+
+comps.base <- lm(a.Koffw ~ a.HS, data = frameToAnalyze)
+plot(frameToAnalyze$a.Koffw ~ frameToAnalyze$a.HS,
+     main = expression(A[LOWER]~"with Relative Error"),
+     ylab = expression(alpha~"(Koffarnus et al., 2015)"),
+     ylim = c(-5,0),
+     xlab = expression(alpha~"(Hursh et al., 2008)"),
+     xlim = c(-5,0))
+abline(comps.base)
+
+comps.weight <- lm(a.Koffw ~ a.HSw, data = frameToAnalyze)
+plot(frameToAnalyze$a.Koffw ~ frameToAnalyze$a.HSw,
      main = expression(A[LOWER]~ "with Absolute Error"),
      ylab = expression(alpha~"(Koffarnus et al., 2015)"),
      ylim = c(-5,0),
