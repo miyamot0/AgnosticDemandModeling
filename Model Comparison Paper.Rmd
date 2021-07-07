@@ -53,6 +53,7 @@ library(kableExtra)
 library(knitr)
 library(papaja)
 library(parameters)
+library(scales)
 library(tidyverse)
 
 r_refs("r-references.bib")
@@ -287,7 +288,7 @@ ggplot(preFit, aes(P, Q)) +
 
 The sections above outline the various similarities and few differences between two of the most commonly-used forms of the @hursh2008economic framework--the @hursh2008economic model and the @koff2015expt restatement of the @hursh2008economic model. Specifically, these two modeling strategies differ in terms of optimization (i.e., minimization of residual error) but share the limitations related to asymptotes. Regarding the first point, residual error and optimization, the two models can provide functionally identical results when the handling of residual error is made comparable. That is, re-weighting the errors (i.e., relative to $\hat{y}$) in the @koff2015expt model yields fits and estimates that can be nearly identical to that of the @hursh2008economic model *in the absence of 0 consumption value.* Alternatively, the @hursh2008economic model can be made to provide estimates comparable to the @koff2015expt model by adjusting residual error to be sensitive to the order of predicted consumption (e.g., $E_i = E_i * 10^{\hat{y}}$, $E_i=10^{\hat{y}}-10^{y}$). A visualization of inter-related arrangements are illustrated in \autoref{fig:fig3ComparisonNonzeroRelativeError}.
 
-```{r fig3ComparisonNonzeroRelativeError, fig.cap="Comparable Model Fits with Comparable Error", fig.height=3, warning=FALSE}
+```{r fig3ComparisonNonzeroRelativeError, fig.cap="Comparable Model Fits with Comparable Error", fig.height=2, warning=FALSE}
 
 preFit.trim = preFit[preFit$Q > 0, ]
 
@@ -340,7 +341,7 @@ EXPTrel = nls(Q ~ Q0 * 10^(kSet*(exp(-a * Q0 * P)-1)),
            upper = c(a = Inf,
                      Q0 = 125),
            algorithm = "port",
-           weights = 1/(predict(EXPT)^2),
+           weights = 1/(predict(EXPT)),
            control = list(
              maxiter = 1000,
              warnOnly = TRUE
@@ -516,7 +517,7 @@ Revisiting logic around a *close enough* approximation of 0 consumption values, 
 
 In a demonstration of this modified @hursh2008economic approach, the full data set from \autoref{fig:fig1CurveSpanEmpirical} can fitted with an inflated $\textit{k}$ parameter and 0 consumption values are replaced with respective $A_{Lower}$ values. Specifically, the most inflated span and corresponding $A_{Lower}$ from \autoref{fig:fig2CurveSpanEmpiricalMod} were used in this example demonstration, i.e. $A_{LOWER} = 10^{log{10}Q_0 - (k + 3)}$. The results of this modified @hursh2008economic approach are illustrated along with the @koff2015expt approach are illustrated in \autoref{fig:fig4ComparisonZeroRelative}.
 
-```{r fig4ComparisonZeroRelative, warning=FALSE, fig.cap="Comparable Model Fits with Comparable Asymptotes", fig.height=3}
+```{r fig4ComparisonZeroRelative, warning=FALSE, fig.cap="Comparable Model Fits with Comparable Asymptotes", fig.height=2}
 
 ggplot(subset(preFit.g, Model != "Exponential (Relative)"), aes(P, Q)) +
   geom_point(data = preFit.point.full) +
@@ -562,7 +563,7 @@ The purpose of this review and report was to clarify and to evaluate the shared 
 
 # Methods
 
-```{r }
+```{r simulationParams}
 
 setparams <- vector(length = 4)
 setparams <- c(-2.5547, .702521, 1.239893, .320221, 3.096, 1.438231)
@@ -572,7 +573,7 @@ x <- c(.1, 1, 3, 10, 30, 100, 300, 1000)
 
 set.seed(65535)
 
-nParticipants = 500
+nParticipants = 1000
 
 sim <- SimulateDemand(nruns = nParticipants, setparams = setparams, sdindex = sdindex, x = x)
 
@@ -596,27 +597,29 @@ The three criteria for systematic data outlined in @stein2015identification were
 
 A total of 3 modeling approaches were evaluated. Each of the 3 approaches was referenced as a specific strategy for conducting demand curve analysis when 0 consumption values were observed in the data. The core aim of each was to conduct pairwise comparisons between estimated parameters and determine whether the various strategies provided statistically equivalent estimates. Each of the strategies are listed below in greater detail.
 
-### Strategy 1: @koff2015expt Model
+### Strategy 1: @koff2015expt Model (Absolute Error)
 
 The @koff2015expt model (absolute error) was fitted to simulated consumption data at the individual-level. The model was fit using the *optim* package included in the R Statistical Program [@R-base] due to its considerable flexibility in performing ordinary least squares regression. Initial starts were derived based on the respective data for parameter $Q_0$ and $\alpha$ was estimated on the log scale to support more comparable step sizes in the optimization. The span constant $k$ was derived from the empirical range of the full data set with an added constant (0.5) to allow the span of the demand curve to extend below the lowest non-zero point of consumption, as is common practice [@kaplan2018understanding]. The same span constant was used across all models to enable consistent comparisons between $Q_0$ and $\alpha$.
 
-### TODO: Strategy 2 Micky Relative: 
+### Strategy 2: @koff2015expt Model (Relative Error)
 
-### Strategy 2: @hursh2008economic Model (Relative Error)
+The @koff2015expt model (relative error) was evaluated in a similar manner as Strategy 1. Model optimization methods and procedures and practices regarding 0 consumption values and parameter $\textit{k}$ were identical except for the handling of residual error. In this approach, residual error *approximated* relative error. The qualifier approximated is emphasized here because error is can only be made relative to $\hat{y}$. This is because values cannot be made relative to 0--a limitation shared with the log scale. This change was accommodated in a customized loss function, whereby residual error was weighted against the inverse of $\hat{y}$, i.e., $e_i = (\hat{y}- y) * \frac{1}{\hat{y}} = \frac{\hat{y}- y}{\hat{y}}$. Consistent with efforts to maintain open and transparent science [@gilroy2019furthering], the source code necessary to reproduce this approach and this report has been posted for public review in a GitHub repository managed by the corresponding author, see Author Note. It warrants noting that this approach differs somewhat from log or percentage differences, which are more akin to the following: $e_i = \frac{y - \hat{y}}{y}$. Regardless, the two approaches are expected to be be similar in most cases but are unlikely to be identical because of the varying reference point. All other parameters were derived consistent with Strategy 1.
 
-The @hursh2008economic model (relative error) was fitted to simulated consumption data at the individual-level. During the fitting, 0 consumption values were replaced by an $A_{Lower}$ value that was generated dynamically based on parameters $Q_0$ and $\textit{k}$. That is, a customized loss function was prepared for use with the *optim* method. Consistent with efforts to maintain open and transparent science [@gilroy2019furthering], the source code necessary to reproduce this approach and this report has been posted for public review in a GitHub repository managed by the corresponding author, see Author Note. All other parameters were derived consistent with Strategy 1.
+### Strategy 3: @hursh2008economic Model (Relative Error)
 
-### Strategy 3: @hursh2008economic Model (Absolute Error)
+The @hursh2008economic model (relative error) was fitted to simulated consumption data at the individual-level. During the fitting, 0 consumption values were replaced by an $A_{Lower}$ value that was generated dynamically based on parameters $Q_0$ and $\textit{k}$. That is, a customized loss function was prepared for use with the *optim* method. All other parameters were derived consistent with the other strategies.
 
-The @hursh2008economic model (absolute error) was fitted to simulated consumption data at the individual-level as well. This strategy was identical to Strategy 2 with the exception of how loss (i.e., residual error) was interpreted during optimization. That is, a customized loss function was prepared and residual error was represented in terms of absolute differences, i.e. $(10^{\hat{y}} - 10^{y})^2$. All other parameters were derived consistent with that of Strategies 1 and 2.
+### Strategy 4: @hursh2008economic Model (Absolute Error)
+
+The @hursh2008economic model (absolute error) was fitted to simulated consumption data at the individual-level as well. This strategy was identical to Strategy 3 with the exception of how loss (i.e., residual error) was interpreted during optimization. That is, a customized loss function was prepared and residual error was represented in terms of absolute differences, i.e. $(10^{\hat{y}} - 10^{y})^2$. All other parameters were derived consistent with that of the other strategies.
 
 ## Analytical Strategy
 
-Pairwise comparisons were conducted for parameters $Q_0$ and $\alpha$ resulting from each of the three strategies. Tests of equivalence were performed in a pairwise fashion (i.e., Strategy 1 vs. 2, Strategy 1 vs. 3) to evaluate estimates resulting from the @koff2015expt model and two modified forms of the @hursh2008economic model. The *tost* method in the *equivalence* R package [@robinson2016package] was used to perform two one-sided t-tests (TOSTs) with paired estimates resulting from each strategy. That is, the focus was not on determining *difference* between strategies but instead on determining *equivalence* between them. Across all tests, corrections were applied due to presence of repeated comparisons, i.e. $p=0.05/4=0.0125$.
+Pairwise comparisons were conducted for parameters $Q_0$ and $\alpha$ resulting from each of the three strategies when controlling for differences in error representation. Tests of equivalence were performed in a pairwise fashion (i.e., Strategy 1 vs. 3, Strategy 2 vs. 4) to evaluate estimates resulting from the @koff2015expt model and the @hursh2008economic model with and without modified error terms. The *tost* method in the *equivalence* R package [@robinson2016package] was used to perform two one-sided t-tests (TOSTs) with paired estimates resulting from each strategy. That is, the focus was not on determining *difference* between strategies but instead on determining *equivalence* between them. Across all tests, corrections were applied due to presence of repeated comparisons, i.e. $p=0.05/2=0.025$.
 
 # Results
 
-```{r fig5scatterplots, fig.cap="Scatterplot Comparisons: Koffarnus et al. (Absolute)", fig.height=7}
+```{r coreAnalyses}
 
 dataFramePrep = data.frame(
   id       = 1:nParticipants,
@@ -652,10 +655,6 @@ min.RSS.EXPT.aw <- function(data, par) {
   
   newData$ys   = getEXPT(par[1], kSet, 10^par[2], newData$x)
   newData$err  = ((newData$ys - subs)/newData$ys)^2
-  #newData$err  = (log10(newData$ys) - log10(subs))^2
-  #newData$err  = (newData$ys - newData$y)^2
-  #newData$err  = newData$err * weights
-  #newData$err  = newData$err * (1/newData$ys)
 
   sum(newData$err)
 }
@@ -683,8 +682,6 @@ min.RSS.EXPL.aw <- function(data, par) {
 
 minQ0 = 0.01
 maxQ0 = 200
-
-#write.csv(dataSet, file = "dataSet.csv")
 
 for (id in 1:nParticipants) {
 
@@ -766,171 +763,112 @@ keepers = passingFrame %>%
 frameToAnalyze = dataFramePrep %>%
   filter(id %in% keepers)
 
-par(mfrow = c(2, 2),
-    oma = c(0, 0, 0, 0))
-
-comps.base <- lm(q0.Koff ~ q0.HS, data = frameToAnalyze)
-plot(frameToAnalyze$q0.Koff ~ frameToAnalyze$q0.HS,
-     main = expression(A[LOWER]~ "with Relative Error"),
-     ylab = expression(Q[0] ~ "(Koffarnus et al., 2015)"),
-     ylim = c(0,100),
-     xlab = expression(Q[0] ~ "(Hursh et al., 2008)"),
-     xlim = c(0,100))
-abline(comps.base)
-
-comps.weight <- lm(q0.Koff ~ q0.HSw, data = frameToAnalyze)
-plot(frameToAnalyze$q0.Koff ~ frameToAnalyze$q0.HSw,
-     main = expression(A[LOWER]~"with Absolute Error"),
-     ylab = expression(Q[0] ~ "(Koffarnus et al., 2015)"),
-     ylim = c(0,100),
-     xlab = expression(Q[0] ~ "(Hursh et al., 2008)"),
-     xlim = c(0,100))
-abline(comps.weight)
-
-comps.base <- lm(a.Koff ~ a.HS, data = frameToAnalyze)
-plot(frameToAnalyze$a.Koff ~ frameToAnalyze$a.HS,
-     main = expression(A[LOWER]~"with Relative Error"),
-     ylab = expression(alpha~"(Koffarnus et al., 2015)"),
-     ylim = c(-5,0),
-     xlab = expression(alpha~"(Hursh et al., 2008)"),
-     xlim = c(-5,0))
-abline(comps.base)
-
-comps.weight <- lm(a.Koff ~ a.HSw, data = frameToAnalyze)
-plot(frameToAnalyze$a.Koff ~ frameToAnalyze$a.HSw,
-     main = expression(A[LOWER]~ "with Absolute Error"),
-     ylab = expression(alpha~"(Koffarnus et al., 2015)"),
-     ylim = c(-5,0),
-     xlab = expression(alpha~"(Hursh et al., 2008)"),
-     xlim = c(-5,0))
-abline(comps.weight)
-
 ```
 
-```{r fig5scatterplots2, fig.cap="Scatterplot Comparisons: Koffarnus et al. (Relative)", fig.height=7, eval=TRUE}
+The data generating process yielded a total of `r nrow(frameToAnalyze)` series that met all 3 indicators of systematic purchase task data (from *N*=`r nParticipants`; `r round((nrow(frameToAnalyze)/nParticipants) * 100, 2)`%). Overall, there was varying degrees of correspondence between each of the different strategies and the results of pairwise comparisons are presented below.
 
-par(mfrow = c(2, 2),
-    oma = c(0, 0, 0, 0))
+## Strategy 1 vs. Strategy 4
 
-comps.base <- lm(q0.Koffw ~ q0.HS, data = frameToAnalyze)
-plot(frameToAnalyze$q0.Koffw ~ frameToAnalyze$q0.HS,
-     main = expression(A[LOWER]~ "with Relative Error"),
-     ylab = expression(Q[0] ~ "(Koffarnus et al., 2015)"),
-     ylim = c(0,100),
-     xlab = expression(Q[0] ~ "(Hursh et al., 2008)"),
-     xlim = c(0,100))
-abline(comps.base)
-
-comps.weight <- lm(q0.Koffw ~ q0.HSw, data = frameToAnalyze)
-plot(frameToAnalyze$q0.Koffw ~ frameToAnalyze$q0.HSw,
-     main = expression(A[LOWER]~"with Absolute Error"),
-     ylab = expression(Q[0] ~ "(Koffarnus et al., 2015)"),
-     ylim = c(0,100),
-     xlab = expression(Q[0] ~ "(Hursh et al., 2008)"),
-     xlim = c(0,100))
-abline(comps.weight)
-
-comps.base <- lm(a.Koffw ~ a.HS, data = frameToAnalyze)
-plot(frameToAnalyze$a.Koffw ~ frameToAnalyze$a.HS,
-     main = expression(A[LOWER]~"with Relative Error"),
-     ylab = expression(alpha~"(Koffarnus et al., 2015)"),
-     ylim = c(-5,0),
-     xlab = expression(alpha~"(Hursh et al., 2008)"),
-     xlim = c(-5,0))
-abline(comps.base)
-
-comps.weight <- lm(a.Koffw ~ a.HSw, data = frameToAnalyze)
-plot(frameToAnalyze$a.Koffw ~ frameToAnalyze$a.HSw,
-     main = expression(A[LOWER]~ "with Absolute Error"),
-     ylab = expression(alpha~"(Koffarnus et al., 2015)"),
-     ylim = c(-5,0),
-     xlab = expression(alpha~"(Hursh et al., 2008)"),
-     xlim = c(-5,0))
-abline(comps.weight)
-
-```
-
-The data generating process yielded a total of `r nrow(frameToAnalyze)` series that met all 3 indicators of systematic purchase task data (from *N*=`r nParticipants`; `r round((nrow(frameToAnalyze)/nParticipants) * 100, 2)`%). The correspondence between parameter estimates was visualized in scatter plots and these relationships are displayed in \autoref{fig:fig5scatterplots}. Overall, there was varying degrees of correspondence between each of the different strategies and the results of pairwise comparisons are presented below.
-
-## Strategy 1 vs. Strategy 2
-
-```{r strat1vsstrat2, include=TRUE}
+```{r strat1vsstrat3}
 
 library(equivalence)
 
-tost.1v2.q0 = tost(frameToAnalyze$q0.Koff, 
-                   frameToAnalyze$q0.HS, 
-                   epsilon = 1, 
-                   conf.level = 0.9875,
-                   paired = TRUE)
-
-cor.1v2.q0 = cor.test(frameToAnalyze$q0.Koff, frameToAnalyze$q0.HS)
-
-tost.1v2.a = tost(frameToAnalyze$a.Koff, 
-                  frameToAnalyze$a.HS, 
-                  epsilon = 1, 
-                  conf.level = 0.9875,
-                  paired = TRUE)
-
-cor.1v2.a = cor.test(frameToAnalyze$a.Koff, frameToAnalyze$a.HS)
-```
-
-An evaluation of the relationship between Strategy 1 and 2 revealed strong correlations for $Q_0$ (r=`r cor.1v2.q0$estimate`, t=`r cor.1v2.q0$statistic`, df=`r cor.1v2.q0$parameter`, `r scales::pvalue(cor.1v2.q0$p.value, accuracy = .0125, add_p = TRUE)`) as well as for $\alpha$ (r=`r cor.1v2.a$estimate`, t=`r cor.1v2.a$statistic`, df=`r cor.1v2.a$parameter`, `r scales::pvalue(cor.1v2.a$p.value, accuracy = .0125, add_p = TRUE)`). The results of TOSTs for $Q_0$ and $\alpha$ were non-significant (`r scales::pvalue(tost.1v2.q0$tost.p.value, accuracy = .0125, add_p = TRUE)`) and significant (`r scales::pvalue(tost.1v2.a$tost.p.value, accuracy = .0125, add_p = TRUE)`), respectively. That is, the results of equivalence testing indicated that both two strategies provided statistically equivalent estimates for $\alpha$ but not for $Q_0$.
-
-## Strategy 1 vs. Strategy 3
-
-```{r strat1vsstrat3, include=TRUE}
-
-tost.1v3.q0 = tost(frameToAnalyze$q0.Koff, 
+tost.1v4.q0 = tost(frameToAnalyze$q0.Koff, 
                    frameToAnalyze$q0.HSw, 
                    epsilon = 1, 
                    conf.level = 0.9875,
                    paired = TRUE)
 
-cor.1v3.q0 = cor.test(frameToAnalyze$q0.Koff, frameToAnalyze$q0.HSw)
+cor.1v4.q0 = cor.test(frameToAnalyze$q0.Koff, frameToAnalyze$q0.HSw)
 
-tost.1v3.a = tost(frameToAnalyze$a.Koff, 
+tost.1v4.a = tost(frameToAnalyze$a.Koff, 
                   frameToAnalyze$a.HSw, 
                   epsilon = 1, 
                   conf.level = 0.9875,
                   paired = TRUE)
 
-cor.1v3.a = cor.test(frameToAnalyze$q0.Koff, frameToAnalyze$q0.HSw)
+cor.1v4.a = cor.test(frameToAnalyze$a.Koff, frameToAnalyze$a.HSw)
+```
+
+```{r s1vs4fig, fig.cap="Comparisons of Strategy 1 and 4 (Absolute Error)", fig.height=3.5}
+
+par(mfrow = c(1, 2),
+    oma   = c(0, 0, 0, 0))
+
+#comps.base <- lm(q0.Koff ~ q0.HSw, data = frameToAnalyze)
+plot(frameToAnalyze$q0.Koff ~ frameToAnalyze$q0.HSw,
+     main = expression(Q[0] ~ "Estimates"),
+     col  = alpha("black", 0.2),
+     ylab = "Strategy 1",
+     ylim = c(0,100),
+     xlab = "Strategy 4",
+     xlim = c(0,100))
+#abline(comps.base)
+
+#comps.base <- lm(a.Koff ~ a.HSw, data = frameToAnalyze)
+plot(frameToAnalyze$a.Koff ~ frameToAnalyze$a.HSw,
+     main = expression(alpha ~ "Estimates"),
+     col  = alpha("black", 0.2),
+     ylab = "Strategy 1",
+     ylim = c(-5,0),
+     xlab = "Strategy 4",
+     xlim = c(-5,0))
+#abline(comps.base)
 
 ```
 
-Evaluations of the relationship between Strategy 2 and 3 revealed perfect correlations for $Q_0$ (r=`r cor.1v3.q0$estimate`, t=`r cor.1v3.q0$statistic`, df=`r cor.1v3.q0$parameter`, `r scales::pvalue(cor.1v3.q0$p.value, accuracy = .0125, add_p = TRUE)`) as well as for $\alpha$ (r=`r cor.1v3.a$estimate`, t=`r cor.1v3.a$statistic`, df=`r cor.1v3.a$parameter`, `r scales::pvalue(cor.1v3.a$p.value, accuracy = .0125, add_p = TRUE)`). Similarly, the results of TOSTs for $Q_0$ (`r scales::pvalue(tost.1v3.q0$tost.p.value, accuracy = .0125, add_p = TRUE)`) and $\alpha$ (`r scales::pvalue(tost.1v3.a$tost.p.value, accuracy = .0125, add_p = TRUE)`) were significant overall. That is, the results of equivalence testing indicated that both strategies yielded statistically equivalent model parameters for both $Q_0$ and $\alpha$.
+An evaluation of the relationship between Strategy 1 and 4 revealed perfect correlations for $Q_0$ (r=`r cor.1v4.q0$estimate`, t=`r cor.1v4.q0$statistic`, df=`r cor.1v4.q0$parameter`, `r scales::pvalue(cor.1v4.q0$p.value, accuracy = .025, add_p = TRUE)`) as well as for $\alpha$ (r=`r cor.1v4.a$estimate`, t=`r cor.1v4.a$statistic`, df=`r cor.1v4.a$parameter`, `r scales::pvalue(cor.1v4.a$p.value, accuracy = .025, add_p = TRUE)`). The results of TOSTs for $Q_0$ and $\alpha$ were non-significant (`r scales::pvalue(tost.1v4.q0$tost.p.value, accuracy = .025, add_p = TRUE)`) and significant (`r scales::pvalue(tost.1v4.a$tost.p.value, accuracy = .025, add_p = TRUE)`), respectively. That is, results of equivalence testing rejected the null hypothesis of statistical difference and indicated that the estimates yielded from each strategy were statistically equivalent for $\alpha$ and for $Q_0$. A visualization of these relationships are illustrated in \autoref{fig:s1vs4fig}.
 
-## Strategy 1 vs. Strategy 4
+## Strategy 2 vs. Strategy 3
 
-```{r strat1vsstrat4, include=TRUE}
+```{r strat2vsstrat4, include=TRUE}
 
-library(equivalence)
-
-tost.1v3.q0 = tost(frameToAnalyze$q0.Koffw, 
+tost.2v4.q0 = tost(frameToAnalyze$q0.Koffw, 
                    frameToAnalyze$q0.HS, 
                    epsilon = 1, 
                    conf.level = 0.9875,
                    paired = TRUE)
 
-print(tost.1v3.q0)
+cor.2v4.q0 = cor.test(frameToAnalyze$q0.Koffw, frameToAnalyze$q0.HS)
 
-cor.1v3.q0 = cor.test(frameToAnalyze$q0.Koffw, frameToAnalyze$q0.HS)
-
-print(cor.1v3.q0)
-
-tost.1v3.a = tost(frameToAnalyze$a.Koffw, 
+tost.2v4.a = tost(frameToAnalyze$a.Koffw, 
                   frameToAnalyze$a.HS, 
                   epsilon = 1, 
                   conf.level = 0.9875,
                   paired = TRUE)
 
-print(tost.1v3.a)
+cor.2v4.a = cor.test(frameToAnalyze$q0.Koffw, frameToAnalyze$q0.HS)
 
-cor.1v3.a = cor.test(frameToAnalyze$a.Koffw, frameToAnalyze$a.HS)
-
-print(cor.1v3.a)
 ```
+
+```{r s2vs3fig, fig.cap="Comparisons of Strategy 2 and 3 (Relative Error)", fig.height=3.5}
+
+par(mfrow = c(1, 2),
+    oma   = c(0, 0, 0, 0))
+
+#comps.base <- lm(q0.Koffw ~ q0.HS, data = frameToAnalyze)
+plot(frameToAnalyze$q0.Koffw ~ frameToAnalyze$q0.HS,
+     main = expression(Q[0] ~ "Estimates"),
+     col  = alpha("black", 0.2),
+     ylab = "Strategy 2",
+     ylim = c(0,100),
+     xlab = "Strategy 3",
+     xlim = c(0,100))
+#abline(comps.base)
+
+#comps.base <- lm(a.Koffw ~ a.HS, data = frameToAnalyze)
+plot(frameToAnalyze$a.Koffw ~ frameToAnalyze$a.HS,
+     main = expression(alpha ~ "Estimates"),
+     col  = alpha("black", 0.2),
+     ylab = "Strategy 2",
+     ylim = c(-5,0),
+     xlab = "Strategy 3",
+     xlim = c(-5,0))
+#abline(comps.base)
+
+```
+
+Evaluations of the relationship between Strategy 2 and 4 revealed strong, but not perfect correlations for $Q_0$ (r=`r cor.2v4.q0$estimate`, t=`r cor.2v4.q0$statistic`, df=`r cor.2v4.q0$parameter`, `r scales::pvalue(cor.2v4.q0$p.value, accuracy = .025, add_p = TRUE)`) and for $\alpha$ (r=`r cor.2v4.a$estimate`, t=`r cor.2v4.a$statistic`, df=`r cor.2v4.a$parameter`, `r scales::pvalue(cor.2v4.a$p.value, accuracy = .025, add_p = TRUE)`). Despite imperfect correlations, the results of TOSTs for $Q_0$ (`r scales::pvalue(tost.2v4.q0$tost.p.value, accuracy = .025, add_p = TRUE)`) and $\alpha$ (`r scales::pvalue(tost.2v4.a$tost.p.value, accuracy = .025, add_p = TRUE)`) were significant overall. That is, the results of equivalence testing indicated that both strategies yielded statistically equivalent model parameters for both $Q_0$ and $\alpha$. That is, results of equivalence testing rejected the null hypothesis of statistical difference and indicated that the estimates yielded from each strategy were statistically equivalent for $\alpha$ but and for $Q_0$. A visualization of these relationships are illustrated in \autoref{fig:s2vs3fig}.
 
 # Discussion
 
