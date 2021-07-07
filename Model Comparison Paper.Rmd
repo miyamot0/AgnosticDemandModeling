@@ -645,10 +645,16 @@ min.RSS.EXPT <- function(data, par) {
 
 min.RSS.EXPT.aw <- function(data, par) {
   newData = data
-
+  newAsymptote = 10^(log10(par[1]) - kSet)
+  
+  subs = newData$y
+  subs = ifelse(subs == 0, newAsymptote, subs)
+  
   newData$ys   = getEXPT(par[1], kSet, 10^par[2], newData$x)
-  newData$err  = (newData$ys - newData$y)^2
-  newData$err  = newData$err * (newData$ys)
+  newData$err  = (log10(newData$ys) - log10(subs))^2
+  #newData$err  = (newData$ys - newData$y)^2
+  #newData$err  = newData$err * weights
+  #newData$err  = newData$err * (1/newData$ys)
 
   sum(newData$err)
 }
@@ -677,6 +683,8 @@ min.RSS.EXPL.aw <- function(data, par) {
 minQ0 = 0.01
 maxQ0 = 200
 
+#write.csv(dataSet, file = "dataSet.csv")
+
 for (id in 1:nParticipants) {
 
   currentData = dataSet[dataSet$id == id, ]
@@ -692,15 +700,41 @@ for (id in 1:nParticipants) {
 
   dataFramePrep[id, c("q0.Koff", "a.Koff")] = fit.Koff$par
   
-  # fit.Koffa <- optim(par   = c(max(currentData$y), -3),
-  #                   fn     = min.RSS.EXPT.aw,
-  #                   method = "L-BFGS-B",
-  #                   lower  = c(0.01, -6),
-  #                   upper  = c(max(currentData$y) * 1.5, 0),
-  #                   data   = currentData)
+  fit.HS   <- optim(par    = c(fit.Koff$par[1], fit.Koff$par[2]),
+                    fn     = min.RSS.EXPL,
+                    method = "L-BFGS-B",
+                    lower  = c(0.01, -5),
+                    upper  = c(max(currentData$y) * 1.25, 0),
+                    data   = currentData)
 
-  print(coef(fit.Koff))
+  dataFramePrep[id, c("q0.HS", "a.HS")] = fit.HS$par
+
+  # ==================================================
+  # Weighted sets
+  # ==================================================
   
+  fit.Koffa <- optim(par   = c(max(currentData$y), -3),
+                     fn     = min.RSS.EXPT.aw,
+                     method = "L-BFGS-B",
+                     lower  = c(0.01, -6),
+                     upper  = c(max(currentData$y) * 1.5, 0),
+                     data   = currentData)
+
+  dataFramePrep[id, c("q0.Koffw", "a.Koffw")] = fit.Koffa$par
+
+  fit.HWa <- optim(par    = c(fit.HS$par[1], fit.HS$par[2]),
+                   fn     = min.RSS.EXPL.aw,
+                   method = "L-BFGS-B",
+                   lower  = c(0.01, -5),
+                   upper  = c(max(currentData$y) * 1.25, 0),
+                   data   = currentData)
+
+  dataFramePrep[id, c("q0.HSw", "a.HSw")] = fit.HWa$par
+  
+  
+  
+  
+
   # fit.Koffa = nls(y ~ Q0 * 10^(kSet*(exp(-a * Q0 * x)-1)),
   #          data = currentData,
   #          start = c(a  = 0.0001,
@@ -719,23 +753,8 @@ for (id in 1:nParticipants) {
   # dataFramePrep[id, c("a.Koffw", "q0.Koffw")] = c(coef(fit.Koffa)["a"],
   #                                                 coef(fit.Koffa)["Q0"])
   
-  fit.HS   <- optim(par    = c(fit.Koff$par[1], fit.Koff$par[2]),
-                    fn     = min.RSS.EXPL,
-                    method = "L-BFGS-B",
-                    lower  = c(0.01, -5),
-                    upper  = c(max(currentData$y) * 1.25, 0),
-                    data   = currentData)
 
-  dataFramePrep[id, c("q0.HS", "a.HS")] = fit.HS$par
 
-  fit.HWa <- optim(par    = c(fit.HS$par[1], fit.HS$par[2]),
-                   fn     = min.RSS.EXPL.aw,
-                   method = "L-BFGS-B",
-                   lower  = c(0.01, -5),
-                   upper  = c(max(currentData$y) * 1.25, 0),
-                   data   = currentData)
-
-  dataFramePrep[id, c("q0.HSw", "a.HSw")] = fit.HWa$par
 }
 
 keepers = passingFrame %>%
@@ -787,7 +806,7 @@ abline(comps.weight)
 
 ```
 
-```{r fig5scatterplots2, fig.cap="Scatterplot Comparisons: Koffarnus et al. (Relative)", fig.height=7, eval=FALSE}
+```{r fig5scatterplots2, fig.cap="Scatterplot Comparisons: Koffarnus et al. (Relative)", fig.height=7, eval=TRUE}
 
 par(mfrow = c(2, 2),
     oma = c(0, 0, 0, 0))
@@ -880,6 +899,37 @@ cor.1v3.a = cor.test(frameToAnalyze$q0.Koff, frameToAnalyze$q0.HSw)
 ```
 
 Evaluations of the relationship between Strategy 2 and 3 revealed perfect correlations for $Q_0$ (r=`r cor.1v3.q0$estimate`, t=`r cor.1v3.q0$statistic`, df=`r cor.1v3.q0$parameter`, `r scales::pvalue(cor.1v3.q0$p.value, accuracy = .0125, add_p = TRUE)`) as well as for $\alpha$ (r=`r cor.1v3.a$estimate`, t=`r cor.1v3.a$statistic`, df=`r cor.1v3.a$parameter`, `r scales::pvalue(cor.1v3.a$p.value, accuracy = .0125, add_p = TRUE)`). Similarly, the results of TOSTs for $Q_0$ (`r scales::pvalue(tost.1v3.q0$tost.p.value, accuracy = .0125, add_p = TRUE)`) and $\alpha$ (`r scales::pvalue(tost.1v3.a$tost.p.value, accuracy = .0125, add_p = TRUE)`) were significant overall. That is, the results of equivalence testing indicated that both strategies yielded statistically equivalent model parameters for both $Q_0$ and $\alpha$.
+
+## Strategy 1 vs. Strategy 4
+
+```{r strat1vsstrat4, include=TRUE}
+
+library(equivalence)
+
+tost.1v3.q0 = tost(frameToAnalyze$q0.Koffw, 
+                   frameToAnalyze$q0.HS, 
+                   epsilon = 1, 
+                   conf.level = 0.9875,
+                   paired = TRUE)
+
+print(tost.1v3.q0)
+
+cor.1v3.q0 = cor.test(frameToAnalyze$q0.Koffw, frameToAnalyze$q0.HS)
+
+print(cor.1v3.q0)
+
+tost.1v3.a = tost(frameToAnalyze$a.Koffw, 
+                  frameToAnalyze$a.HS, 
+                  epsilon = 1, 
+                  conf.level = 0.9875,
+                  paired = TRUE)
+
+print(tost.1v3.a)
+
+cor.1v3.a = cor.test(frameToAnalyze$a.Koffw, frameToAnalyze$a.HS)
+
+print(cor.1v3.a)
+```
 
 # Discussion
 
