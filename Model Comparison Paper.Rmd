@@ -692,14 +692,32 @@ for (id in 1:nParticipants) {
 
   dataFramePrep[id, c("q0.Koff", "a.Koff")] = fit.Koff$par
   
-  fit.Koffa <- optim(par   = c(max(currentData$y), -3),
-                    fn     = min.RSS.EXPT.aw,
-                    method = "L-BFGS-B",
-                    lower  = c(0.01, -5),
-                    upper  = c(max(currentData$y) * 1.25, 0),
-                    data   = currentData)
+  # fit.Koffa <- optim(par   = c(max(currentData$y), -3),
+  #                   fn     = min.RSS.EXPT.aw,
+  #                   method = "L-BFGS-B",
+  #                   lower  = c(0.01, -6),
+  #                   upper  = c(max(currentData$y) * 1.5, 0),
+  #                   data   = currentData)
 
-  dataFramePrep[id, c("q0.Koffw", "a.Koffw")] = fit.Koffa$par
+  print(coef(fit.Koff))
+  
+  # fit.Koffa = nls(y ~ Q0 * 10^(kSet*(exp(-a * Q0 * x)-1)),
+  #          data = currentData,
+  #          start = c(a  = 0.0001,
+  #                    Q0 = 100),
+  #          lower = c(a = -Inf,
+  #                    Q0 = 1),
+  #          upper = c(a = Inf,
+  #                    Q0 = 125),
+  #          algorithm = "port",
+  #          weights = predict(fit.Koff),
+  #          control = list(
+  #            maxiter = 1000,
+  #            warnOnly = TRUE
+  #          ))
+  # 
+  # dataFramePrep[id, c("a.Koffw", "q0.Koffw")] = c(coef(fit.Koffa)["a"],
+  #                                                 coef(fit.Koffa)["Q0"])
   
   fit.HS   <- optim(par    = c(fit.Koff$par[1], fit.Koff$par[2]),
                     fn     = min.RSS.EXPL,
@@ -769,7 +787,7 @@ abline(comps.weight)
 
 ```
 
-```{r fig5scatterplots2, fig.cap="Scatterplot Comparisons: Koffarnus et al. (Relative)", fig.height=7}
+```{r fig5scatterplots2, fig.cap="Scatterplot Comparisons: Koffarnus et al. (Relative)", fig.height=7, eval=FALSE}
 
 par(mfrow = c(2, 2),
     oma = c(0, 0, 0, 0))
