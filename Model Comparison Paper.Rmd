@@ -651,7 +651,8 @@ min.RSS.EXPT.aw <- function(data, par) {
   subs = ifelse(subs == 0, newAsymptote, subs)
   
   newData$ys   = getEXPT(par[1], kSet, 10^par[2], newData$x)
-  newData$err  = (log10(newData$ys) - log10(subs))^2
+  newData$err  = ((newData$ys - subs)/newData$ys)^2
+  #newData$err  = (log10(newData$ys) - log10(subs))^2
   #newData$err  = (newData$ys - newData$y)^2
   #newData$err  = newData$err * weights
   #newData$err  = newData$err * (1/newData$ys)
