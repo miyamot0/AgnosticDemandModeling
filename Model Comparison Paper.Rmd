@@ -1,5 +1,5 @@
 ---
-title             : "Unnecessary Model Distinctions in the Operant Demand Framework: A Review and Simulations of Zero Values in Demand Curve Analysis"
+title             : "Hidden Equivalence in the Operant Demand Framework: A Review and Simulations of Non-Consumption in Demand Curve Analysis"
 shorttitle        : "Exponential Model"
 
 author: 
@@ -573,7 +573,7 @@ x <- c(.1, 1, 3, 10, 30, 100, 300, 1000)
 
 set.seed(65535)
 
-nParticipants = 10000
+nParticipants = 1000
 
 sim <- SimulateDemand(nruns = nParticipants, setparams = setparams, sdindex = sdindex, x = x)
 
@@ -581,7 +581,7 @@ dataSet = sim$simvalues
 
 passingFrame = beezdemand::CheckUnsystematic(dataSet)
 
-kSet = log10(max(dataSet$y)) - log10(min(dataSet$y[dataSet$y > 0])) + 0.5
+kSet = log10(max(dataSet$y)) - log10(min(dataSet$y[dataSet$y > 0])) + 3
 
 ```
 
@@ -769,7 +769,7 @@ The data generating process yielded a total of `r nrow(frameToAnalyze)` series t
 
 ## Strategy 1 vs. Strategy 4
 
-```{r strat1vsstrat3}
+```{r s1vs4fig, fig.cap="Comparisons of Strategy 1 and 4 (Absolute Error)", fig.height=4}
 
 library(equivalence)
 
@@ -788,9 +788,6 @@ tost.1v4.a = tost(frameToAnalyze$a.Koff,
                   paired = TRUE)
 
 cor.1v4.a = cor.test(frameToAnalyze$a.Koff, frameToAnalyze$a.HSw)
-```
-
-```{r s1vs4fig, fig.cap="Comparisons of Strategy 1 and 4 (Absolute Error)", fig.height=3.5}
 
 par(mfrow = c(1, 2),
     oma   = c(0, 0, 0, 0))
@@ -827,7 +824,7 @@ An evaluation of the relationship between Strategy 1 and 4 revealed perfect corr
 
 ## Strategy 2 vs. Strategy 3
 
-```{r strat2vsstrat4, include=TRUE}
+```{r s2vs3fig, fig.cap="Comparisons of Strategy 2 and 3 (Relative Error)", fig.height=4}
 
 tost.2v4.q0 = tost(frameToAnalyze$q0.Koffw, 
                    frameToAnalyze$q0.HS, 
@@ -844,10 +841,6 @@ tost.2v4.a = tost(frameToAnalyze$a.Koffw,
                   paired = TRUE)
 
 cor.2v4.a = cor.test(frameToAnalyze$q0.Koffw, frameToAnalyze$q0.HS)
-
-```
-
-```{r s2vs3fig, fig.cap="Comparisons of Strategy 2 and 3 (Relative Error)", fig.height=3.5}
 
 par(mfrow = c(1, 2),
     oma   = c(0, 0, 0, 0))
