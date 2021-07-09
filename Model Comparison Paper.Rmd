@@ -573,7 +573,7 @@ x <- c(.1, 1, 3, 10, 30, 100, 300, 1000)
 
 set.seed(65535)
 
-nParticipants = 1000
+nParticipants = 500
 
 sim <- SimulateDemand(nruns = nParticipants, setparams = setparams, sdindex = sdindex, x = x)
 
@@ -879,8 +879,8 @@ plot(frameToAnalyze$a.Koffw ~ frameToAnalyze$a.HS,
 
 box(bty="l")
 
-tost(frameToAnalyze$q0.Koffw, 
-     frameToAnalyze$q0.HSw2, 
+tost(frameToAnalyze$q0.HSw2, 
+     frameToAnalyze$q0.Koffw, 
      epsilon = 1, 
      conf.level = 0.9875,
      paired = TRUE)
@@ -923,8 +923,12 @@ plot(frameToAnalyze$a.Koffw ~ frameToAnalyze$a.HSw2,
 
 box(bty="l")
 
+write.csv(frameToAnalyze, file = "outputfile.csv")
+
 
 ```
+
+TODO: log q0s
 
 Evaluations of the relationship between Strategy 2 and 4 revealed strong, but not perfect correlations for $Q_0$ (r=`r cor.2v3.q0$estimate`, t=`r cor.2v3.q0$statistic`, df=`r cor.2v3.q0$parameter`, `r scales::pvalue(cor.2v3.q0$p.value, accuracy = .025, add_p = TRUE)`) and for $\alpha$ (r=`r cor.2v3.a$estimate`, t=`r cor.2v3.a$statistic`, df=`r cor.2v3.a$parameter`, `r scales::pvalue(cor.2v3.a$p.value, accuracy = .025, add_p = TRUE)`). Despite strong correlations, the results of TOSTs for not significant for $Q_0$ (`r scales::pvalue(tost.2v3.q0$tost.p.value, accuracy = .025, add_p = TRUE)`) but significant for $\alpha$ (`r scales::pvalue(tost.2v3.a$tost.p.value, accuracy = .025, add_p = TRUE)`).
 
