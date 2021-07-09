@@ -599,7 +599,7 @@ A total of 4 modeling approaches were evaluated (2 x Model, 2 x Error Handling).
 
 ### Strategy 1: @koff2015expt Model (Absolute)
 
-The @koff2015expt model (absolute error difference) was fitted to simulated consumption data at the individual-level. The model was fit using the *optim* package included in the R Statistical Program [@R-base] due to its considerable flexibility in performing ordinary least squares regression. Initial starts were derived based on the respective data for parameter $Q_0$ and $\alpha$ was estimated on the log scale to support more comparable step sizes in the optimization. The span constant $k$ was derived from the empirical range of the full data set with an added constant (3) to allow the span of the demand curve to extend below the lowest non-zero point of consumption, as is common practice [@kaplan2018understanding]. The same span constant was used across all models to enable consistent comparisons between $Q_0$ and $\alpha$. Non-consumption values remained at a value of 0 in this approach.
+The @koff2015expt model (absolute error difference) was fitted to simulated consumption data at the individual-level. The model was fit using the *optim* package included in the R Statistical Program [@R-base] due to its considerable flexibility in performing ordinary least squares regression. Initial starts were derived based on the respective data for parameter $Q_0$ and both $Q_0$ and $\alpha$ were estimated on the log scale to support more comparable step sizes in the optimization. The span constant $k$ was derived from the empirical range of the full data set with an added constant (3) to allow the span of the demand curve to extend below the lowest non-zero point of consumption, as is common practice [@kaplan2018understanding]. The same span constant was used across all models to enable consistent comparisons between $Q_0$ and $\alpha$. Non-consumption values remained at a value of 0 in this approach.
 
 ### Strategy 2: @koff2015expt Model (Relative Error)
 
@@ -645,7 +645,7 @@ getEXPT <- function(Q, K, A, P) {
 }
 
 min.RSS.EXPT <- function(data, par) {
-  with(data, sum((getEXPT(par[1], kSet, 10^par[2], x) - y)^2))
+  with(data, sum((getEXPT(10^par[1], kSet, 10^par[2], x) - y)^2))
 }
 
 min.RSS.EXPT.aw <- function(data, par) {
@@ -654,7 +654,7 @@ min.RSS.EXPT.aw <- function(data, par) {
   # subs = newData$y
   # subs = ifelse(subs == 0, newAsymptote, subs)
   
-  newData$ys   = getEXPT(par[1], kSet, 10^par[2], newData$x)
+  newData$ys   = getEXPT(10^par[1], kSet, 10^par[2], newData$x)
   newData$err  = (newData$y - newData$ys)/newData$ys
   newData$err  = newData$err^2
 
@@ -663,20 +663,20 @@ min.RSS.EXPT.aw <- function(data, par) {
 
 min.RSS.EXPL <- function(data, par) {
   newData = data
-  newAsymptote = 10^(log10(par[1]) - kSet)
+  newAsymptote = 10^(log10(10^par[1]) - kSet)
   newData[newData$y == 0, "y"] <- newAsymptote
   newData$y <- log10(newData$y)
 
-  with(newData, sum((getEXPL(par[1], kSet, 10^par[2], x) - y)^2))
+  with(newData, sum((getEXPL(10^par[1], kSet, 10^par[2], x) - y)^2))
 }
 
 min.RSS.EXPL.aw <- function(data, par) {
   newData = data
-  newAsymptote = 10^(log10(par[1]) - kSet)
+  newAsymptote = 10^(log10(10^par[1]) - kSet)
   newData[newData$y == 0, "y"] <- newAsymptote
 
   newData$y    = log10(newData$y)
-  newData$ys   = getEXPL(par[1], kSet, 10^par[2], newData$x)
+  newData$ys   = getEXPL(10^par[1], kSet, 10^par[2], newData$x)
   newData$err  = (10^newData$ys - 10^newData$y)^2
 
   sum(newData$err)
@@ -684,11 +684,11 @@ min.RSS.EXPL.aw <- function(data, par) {
 
 min.RSS.EXPL.aw2 <- function(data, par) {
   newData = data
-  newAsymptote = 10^(log10(par[1]) - kSet)
+  newAsymptote = 10^(log10(10^par[1]) - kSet)
   newData[newData$y == 0, "y"] <- newAsymptote
 
   newData$y <- log10(newData$y)
-  newData$ys   = getEXPL(par[1], kSet, 10^par[2], newData$x)
+  newData$ys   = getEXPL(10^par[1], kSet, 10^par[2], newData$x)
   newData$err  = (10^newData$y - 10^newData$ys)/10^newData$ys
   newData$err  = newData$err^2
 
@@ -708,20 +708,20 @@ for (id in 1:nParticipants) {
   # Un-Weighted sets
   # ==================================================
   
-  fit.Koff <- optim(par  = c(max(currentData$y), -3),
+  fit.Koff <- optim(par  = c(log10(max(currentData$y)), -5),
                     fn   = min.RSS.EXPT,
-                    method = "L-BFGS-B",
-                    lower  = c(0.01, -5),
-                    upper  = c(max(currentData$y) * 1.25, 0),
+                  method = "L-BFGS-B",
+                  lower  = c(-6, -6),
+                  upper  = c(log10(max(currentData$y) * 2), 0),
                     data = currentData)
 
   dataFramePrep[id, c("q0.Koff", "a.Koff")] = fit.Koff$par
   
-  fit.HS   <- optim(par    = c(fit.Koff$par[1], fit.Koff$par[2]),
+  fit.HS   <- optim(par    = c(log10(max(currentData$y)), -5),
                     fn     = min.RSS.EXPL,
                     method = "L-BFGS-B",
-                    lower  = c(0.01, -5),
-                    upper  = c(max(currentData$y) * 1.25, 0),
+                    lower  = c(-6, -6),
+                    upper  = c(log10(max(currentData$y) * 3), 0),
                     data   = currentData)
 
   dataFramePrep[id, c("q0.HS", "a.HS")] = fit.HS$par
@@ -730,29 +730,29 @@ for (id in 1:nParticipants) {
   # Weighted sets
   # ==================================================
   
-  fit.Koffa <- optim(par    = c(fit.Koff$par[1], fit.Koff$par[2]),
+  fit.Koffa <- optim(par    = c(log10(max(currentData$y)), -5),
                      fn     = min.RSS.EXPT.aw,
-                     method = "L-BFGS-B",
-                     lower  = c(0.01, -6),
-                     upper  = c(max(currentData$y) * 1.5, 0),
+                    method = "L-BFGS-B",
+                    lower  = c(-6, -6),
+                    upper  = c(log10(max(currentData$y) * 2), 0),
                      data   = currentData)
 
   dataFramePrep[id, c("q0.Koffw", "a.Koffw")] = fit.Koffa$par
 
-  fit.HWa <- optim(par    = c(fit.Koff$par[1], fit.Koff$par[2]),
+  fit.HWa <- optim(par    = c(log10(max(currentData$y)), -5),
                    fn     = min.RSS.EXPL.aw,
-                   method = "L-BFGS-B",
-                   lower  = c(0.01, -5),
-                   upper  = c(max(currentData$y) * 1.25, 0),
+                  method = "L-BFGS-B",
+                  lower  = c(-6, -6),
+                  upper  = c(log10(max(currentData$y) * 2), 0),
                    data   = currentData)
 
   dataFramePrep[id, c("q0.HSw", "a.HSw")] = fit.HWa$par
   
-  fit.HWb <- optim(par    = c(fit.Koff$par[1], fit.Koff$par[2]),
+  fit.HWb <- optim(par    = c(log10(max(currentData$y)), -5),
                    fn     = min.RSS.EXPL.aw2,
-                   method = "L-BFGS-B",
-                   lower  = c(0.01, -5),
-                   upper  = c(max(currentData$y) * 1.25, 0),
+                  method = "L-BFGS-B",
+                  lower  = c(-6, -6),
+                  upper  = c(log10(max(currentData$y) * 2), 0),
                    data   = currentData)
 
   dataFramePrep[id, c("q0.HSw2", "a.HSw2")] = fit.HWb$par
@@ -802,9 +802,9 @@ plot(frameToAnalyze$q0.Koff ~ frameToAnalyze$q0.HSw,
      main = expression(Q[0] ~ "Estimates"),
      col  = alpha("black", 0.1),
      ylab = "Strategy 1",
-     ylim = c(0,100),
+     ylim = c(0,3),
      xlab = "Strategy 4",
-     xlim = c(0,100),
+     xlim = c(0,3),
      frame=FALSE)
 #abline(comps.base)
 
@@ -858,9 +858,9 @@ plot(frameToAnalyze$q0.Koffw ~ frameToAnalyze$q0.HS,
      main = expression(Q[0] ~ "Estimates"),
      col  = alpha("black", 0.1),
      ylab = "Strategy 2",
-     ylim = c(0,100),
+     ylim = c(0,3),
      xlab = "Strategy 3",
-     xlim = c(0,100),
+     xlim = c(0,3),
      frame=FALSE)
 #abline(comps.base)
 
@@ -879,60 +879,63 @@ plot(frameToAnalyze$a.Koffw ~ frameToAnalyze$a.HS,
 
 box(bty="l")
 
-tost(frameToAnalyze$q0.HSw2, 
-     frameToAnalyze$q0.Koffw, 
-     epsilon = 1, 
-     conf.level = 0.9875,
-     paired = TRUE)
+# tost(frameToAnalyze$q0.HSw2,
+#      frameToAnalyze$q0.Koffw,
+#      epsilon = 1,
+#      conf.level = 0.9875,
+#      paired = TRUE)
+# 
+# cor.2v3.q0 = cor.test(frameToAnalyze$q0.Koffw,
+#                       frameToAnalyze$q0.HSw2)
+# 
+# cor.2v3.q0
 
-cor.2v3.q0 = cor.test(frameToAnalyze$q0.Koffw, 
-                      frameToAnalyze$q0.HSw2)
+# 
+# tost(frameToAnalyze$a.Koffw, 
+#      frameToAnalyze$a.HSw2, 
+#      epsilon = 1, 
+#      conf.level = 0.9875,
+#      paired = TRUE)
+# 
+cor.2v3.a = cor.test(frameToAnalyze$a.Koffw, 
+                     frameToAnalyze$a.HSw2)
 
-tost(frameToAnalyze$a.Koffw, 
-     frameToAnalyze$a.HSw2, 
-     epsilon = 1, 
-     conf.level = 0.9875,
-     paired = TRUE)
-
-cor.2v3.q0 = cor.test(frameToAnalyze$q0.Koffw, 
-                      frameToAnalyze$q0.HSw2)
-
-#comps.base <- lm(q0.Koffw ~ q0.HS, data = frameToAnalyze)
-plot(frameToAnalyze$q0.Koffw ~ frameToAnalyze$q0.HSw2,
-     main = expression(Q[0] ~ "Estimates"),
-     col  = alpha("black", 0.1),
-     ylab = "Strategy 2",
-     ylim = c(0,100),
-     xlab = "Strategy 3",
-     xlim = c(0,100),
-     frame=FALSE)
-#abline(comps.base)
-
-box(bty="l")
-
-#comps.base <- lm(a.Koffw ~ a.HS, data = frameToAnalyze)
-plot(frameToAnalyze$a.Koffw ~ frameToAnalyze$a.HSw2,
-     main = expression(alpha ~ "Estimates"),
-     col  = alpha("black", 0.1),
-     ylab = "Strategy 2",
-     ylim = c(-5,0),
-     xlab = "Strategy 3",
-     xlim = c(-5,0),
-     frame=FALSE)
-#abline(comps.base)
-
-box(bty="l")
-
-write.csv(frameToAnalyze, file = "outputfile.csv")
+cor.2v3.a
+# 
+# #comps.base <- lm(q0.Koffw ~ q0.HS, data = frameToAnalyze)
+# plot(frameToAnalyze$q0.Koffw ~ frameToAnalyze$q0.HSw2,
+#      main = expression(Q[0] ~ "Estimates"),
+#      col  = alpha("black", 0.1),
+#      ylab = "Strategy 2",
+#      ylim = c(0,100),
+#      xlab = "Strategy 3",
+#      xlim = c(0,100),
+#      frame=FALSE)
+# #abline(comps.base)
+# 
+# box(bty="l")
+# 
+# #comps.base <- lm(a.Koffw ~ a.HS, data = frameToAnalyze)
+# plot(frameToAnalyze$a.Koffw ~ frameToAnalyze$a.HSw2,
+#      main = expression(alpha ~ "Estimates"),
+#      col  = alpha("black", 0.1),
+#      ylab = "Strategy 2",
+#      ylim = c(-5,0),
+#      xlab = "Strategy 3",
+#      xlim = c(-5,0),
+#      frame=FALSE)
+# #abline(comps.base)
+# 
+# box(bty="l")
+# 
+# write.csv(frameToAnalyze, file = "outputfile.csv")
 
 
 ```
 
-TODO: log q0s
+TODO: get rid of experiment
 
-Evaluations of the relationship between Strategy 2 and 4 revealed strong, but not perfect correlations for $Q_0$ (r=`r cor.2v3.q0$estimate`, t=`r cor.2v3.q0$statistic`, df=`r cor.2v3.q0$parameter`, `r scales::pvalue(cor.2v3.q0$p.value, accuracy = .025, add_p = TRUE)`) and for $\alpha$ (r=`r cor.2v3.a$estimate`, t=`r cor.2v3.a$statistic`, df=`r cor.2v3.a$parameter`, `r scales::pvalue(cor.2v3.a$p.value, accuracy = .025, add_p = TRUE)`). Despite strong correlations, the results of TOSTs for not significant for $Q_0$ (`r scales::pvalue(tost.2v3.q0$tost.p.value, accuracy = .025, add_p = TRUE)`) but significant for $\alpha$ (`r scales::pvalue(tost.2v3.a$tost.p.value, accuracy = .025, add_p = TRUE)`).
-
-That is, the results of equivalence testing indicated that both strategies yielded statistically equivalent model parameters for both $Q_0$ and $\alpha$. That is, results of equivalence testing rejected the null hypothesis of statistical difference and indicated that the estimates yielded from each strategy were statistically equivalent for $\alpha$ but and for $Q_0$. A visualization of these relationships are illustrated in \autoref{fig:s2vs3fig}.
+Evaluations of the relationship between Strategy 2 and 4 revealed strong, but not perfect correlations for $Q_0$ (r=`r cor.2v3.q0$estimate`, t=`r cor.2v3.q0$statistic`, df=`r cor.2v3.q0$parameter`, `r scales::pvalue(cor.2v3.q0$p.value, accuracy = .025, add_p = TRUE)`) and for $\alpha$ (r=`r cor.2v3.a$estimate`, t=`r cor.2v3.a$statistic`, df=`r cor.2v3.a$parameter`, `r scales::pvalue(cor.2v3.a$p.value, accuracy = .025, add_p = TRUE)`). Despite imperfect correlations, TOSTs were significant for $Q_0$ (`r scales::pvalue(tost.2v3.q0$tost.p.value, accuracy = .025, add_p = TRUE)`) as well as for $\alpha$ (`r scales::pvalue(tost.2v3.a$tost.p.value, accuracy = .025, add_p = TRUE)`). That is, the results of equivalence testing indicated that both strategies yielded statistically equivalent model parameters for both $Q_0$ and $\alpha$. That is, results of equivalence testing rejected the null hypothesis of statistical difference and indicated that the estimates yielded from each strategy were statistically equivalent for $\alpha$ but and for $Q_0$. A visualization of these relationships are illustrated in \autoref{fig:s2vs3fig}.
 
 # Discussion
 
