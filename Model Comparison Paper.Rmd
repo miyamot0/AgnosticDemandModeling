@@ -573,7 +573,7 @@ x <- c(.1, 1, 3, 10, 30, 100, 300, 1000)
 
 set.seed(65535)
 
-nParticipants = 500
+nParticipants = 10000
 
 sim <- SimulateDemand(nruns = nParticipants, setparams = setparams, sdindex = sdindex, x = x)
 
@@ -621,19 +621,26 @@ Pairwise comparisons were conducted for parameters $Q_0$ and $\alpha$ resulting 
 
 ```{r coreAnalyses}
 
+keepers = passingFrame %>%
+  filter(TotalPass == 3 & NumPosValues > 0) %>%
+  select(id) %>%
+  pull()
+
+nPassing = length(keepers)
+
 dataFramePrep = data.frame(
-  id       = 1:nParticipants,
-  q0.HS    = numeric(length = nParticipants),
-  q0.HSw   = numeric(length = nParticipants),
-  q0.HSw2  = numeric(length = nParticipants),
-  q0.Koff  = numeric(length = nParticipants),
-  q0.Koffw = numeric(length = nParticipants),
-  a.HS     = numeric(length = nParticipants),
-  a.HSw    = numeric(length = nParticipants),
-  a.HSw2   = numeric(length = nParticipants),
-  a.Koff   = numeric(length = nParticipants),
-  a.Koffw  = numeric(length = nParticipants),
-  K        = numeric(length = nParticipants)
+  id       = 1:nPassing,
+  q0.HS    = numeric(length = nPassing),
+  q0.HSw   = numeric(length = nPassing),
+  q0.HSw2  = numeric(length = nPassing),
+  q0.Koff  = numeric(length = nPassing),
+  q0.Koffw = numeric(length = nPassing),
+  a.HS     = numeric(length = nPassing),
+  a.HSw    = numeric(length = nPassing),
+  a.HSw2   = numeric(length = nPassing),
+  a.Koff   = numeric(length = nPassing),
+  a.Koffw  = numeric(length = nPassing),
+  K        = numeric(length = nPassing)
 )
 
 getEXPL <- function(Q, K, A, P) {
@@ -650,10 +657,7 @@ min.RSS.EXPT <- function(data, par) {
 
 min.RSS.EXPT.aw <- function(data, par) {
   newData = data
-  #newAsymptote = 10^(log10(par[1]) - kSet)
-  # subs = newData$y
-  # subs = ifelse(subs == 0, newAsymptote, subs)
-  
+
   newData$ys   = getEXPT(10^par[1], kSet, 10^par[2], newData$x)
   newData$err  = (newData$y - newData$ys)/newData$ys
   newData$err  = newData$err^2
@@ -698,9 +702,9 @@ min.RSS.EXPL.aw2 <- function(data, par) {
 minQ0 = 0.01
 maxQ0 = 200
 
-for (id in 1:nParticipants) {
+for (id in 1:nPassing) {
 
-  currentData = dataSet[dataSet$id == id, ]
+  currentData = dataSet[dataSet$id == keepers[id], ]
 
   dataFramePrep[id, "K"] = kSet
 
@@ -758,13 +762,7 @@ for (id in 1:nParticipants) {
   dataFramePrep[id, c("q0.HSw2", "a.HSw2")] = fit.HWb$par
 }
 
-keepers = passingFrame %>%
-  filter(TotalPass == 3) %>%
-  select(id) %>%
-  pull()
-
-frameToAnalyze = dataFramePrep %>%
-  filter(id %in% keepers)
+frameToAnalyze = dataFramePrep
 
 ```
 
@@ -829,7 +827,7 @@ The comparison between Strategy 1 and Strategy 4 was designed to evaluate differ
 
 ## Strategy 2 vs. Strategy 3
 
-```{r s2vs3fig, fig.cap="Comparisons of Strategy 2 and 3 (Relative Error)", fig.height=8}
+```{r s2vs3fig, fig.cap="Comparisons of Strategy 2 and 3 (Relative Error)", fig.height=4}
 
 tost.2v3.q0 = tost(frameToAnalyze$q0.Koffw, 
                    frameToAnalyze$q0.HS, 
@@ -849,8 +847,7 @@ tost.2v3.a = tost(frameToAnalyze$a.Koffw,
 cor.2v3.a = cor.test(frameToAnalyze$q0.Koffw, 
                      frameToAnalyze$q0.HS)
 
-par(#mfrow = c(1, 2),
-    mfrow = c(2, 2),
+par(mfrow = c(1, 2),
     oma   = c(0, 0, 0, 0))
 
 #comps.base <- lm(q0.Koffw ~ q0.HS, data = frameToAnalyze)
@@ -879,61 +876,10 @@ plot(frameToAnalyze$a.Koffw ~ frameToAnalyze$a.HS,
 
 box(bty="l")
 
-# tost(frameToAnalyze$q0.HSw2,
-#      frameToAnalyze$q0.Koffw,
-#      epsilon = 1,
-#      conf.level = 0.9875,
-#      paired = TRUE)
-# 
-# cor.2v3.q0 = cor.test(frameToAnalyze$q0.Koffw,
-#                       frameToAnalyze$q0.HSw2)
-# 
-# cor.2v3.q0
-
-# 
-# tost(frameToAnalyze$a.Koffw, 
-#      frameToAnalyze$a.HSw2, 
-#      epsilon = 1, 
-#      conf.level = 0.9875,
-#      paired = TRUE)
-# 
-cor.2v3.a = cor.test(frameToAnalyze$a.Koffw, 
-                     frameToAnalyze$a.HSw2)
-
-cor.2v3.a
-# 
-# #comps.base <- lm(q0.Koffw ~ q0.HS, data = frameToAnalyze)
-# plot(frameToAnalyze$q0.Koffw ~ frameToAnalyze$q0.HSw2,
-#      main = expression(Q[0] ~ "Estimates"),
-#      col  = alpha("black", 0.1),
-#      ylab = "Strategy 2",
-#      ylim = c(0,100),
-#      xlab = "Strategy 3",
-#      xlim = c(0,100),
-#      frame=FALSE)
-# #abline(comps.base)
-# 
-# box(bty="l")
-# 
-# #comps.base <- lm(a.Koffw ~ a.HS, data = frameToAnalyze)
-# plot(frameToAnalyze$a.Koffw ~ frameToAnalyze$a.HSw2,
-#      main = expression(alpha ~ "Estimates"),
-#      col  = alpha("black", 0.1),
-#      ylab = "Strategy 2",
-#      ylim = c(-5,0),
-#      xlab = "Strategy 3",
-#      xlim = c(-5,0),
-#      frame=FALSE)
-# #abline(comps.base)
-# 
-# box(bty="l")
-# 
-# write.csv(frameToAnalyze, file = "outputfile.csv")
-
 
 ```
 
-TODO: get rid of experiment
+TODO: bump down to 5000
 
 Evaluations of the relationship between Strategy 2 and 4 revealed strong, but not perfect correlations for $Q_0$ (r=`r cor.2v3.q0$estimate`, t=`r cor.2v3.q0$statistic`, df=`r cor.2v3.q0$parameter`, `r scales::pvalue(cor.2v3.q0$p.value, accuracy = .025, add_p = TRUE)`) and for $\alpha$ (r=`r cor.2v3.a$estimate`, t=`r cor.2v3.a$statistic`, df=`r cor.2v3.a$parameter`, `r scales::pvalue(cor.2v3.a$p.value, accuracy = .025, add_p = TRUE)`). Despite imperfect correlations, TOSTs were significant for $Q_0$ (`r scales::pvalue(tost.2v3.q0$tost.p.value, accuracy = .025, add_p = TRUE)`) as well as for $\alpha$ (`r scales::pvalue(tost.2v3.a$tost.p.value, accuracy = .025, add_p = TRUE)`). That is, the results of equivalence testing indicated that both strategies yielded statistically equivalent model parameters for both $Q_0$ and $\alpha$. That is, results of equivalence testing rejected the null hypothesis of statistical difference and indicated that the estimates yielded from each strategy were statistically equivalent for $\alpha$ but and for $Q_0$. A visualization of these relationships are illustrated in \autoref{fig:s2vs3fig}.
 
@@ -1130,3 +1076,4 @@ $$
 -0.5                   & \approx -1
 \end{aligned}
 $$ Note: The examples provided above illustrate how log difference $(-0.1053)$ and fractional difference $(-0.1)$ are quite close for small differences. However, the difference between log difference $(-0.6931)$ and fractional difference $(-0.5)$ begins to differ considerably with larger changes. As such, the two approaches to reflecting relative differences are unlikely to be perfectly related outside of optimal conditions.
+
