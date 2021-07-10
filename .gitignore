@@ -2,13 +2,11 @@
 .Rhistory
 .RData
 .Ruserdata
-
 Older/
 Model-Comparison-Paper_files/
-
 *.tex
 *.pdf
 *.log
 *.fff
-
 showFrac.R
+.DS_Store
