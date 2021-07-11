@@ -164,9 +164,9 @@ ggplot(preFit, aes(P, Q)) +
            col   = "grey40",
            label = paste("Non-Zero Upper Bound at Q0 : ",
                          round(max(preFit$Q),2))) +
-  scale_x_log10(breaks = c(preFit$P, 10000),
-                labels = c(preFit$P, 10000),
-                limits = c(0.1, 10000)) +
+  scale_x_log10(breaks = c(preFit$P),
+                labels = c(preFit$P),
+                limits = c(0.1, 5000)) +
   xlab("Unit Price") +
   ylab("Consumption") +
   theme_bw() +
@@ -236,38 +236,38 @@ ggplot(preFit, aes(P, Q)) +
            adj   = 0,
            col   = "grey60",
            parse = TRUE,
-           label = expression("K (Empirical): " ~ A[LOWER] == 5.442)) +
+           label = expression("K (Empirical): " ~ A[Lower] == 5.442)) +
   annotate("text",
            x     = 100,
            y     = 75,
            adj   = 0,
            col   = "grey50",
            parse = TRUE,
-           label = expression("K + 0.5: " ~ A[LOWER] == 1.7209)) +
+           label = expression("K + 0.5: " ~ A[Lower] == 1.7209)) +
   annotate("text",
            x     = 100,
            y     = 60,
            adj   = 0,
            col   = "grey40",
            parse = TRUE,
-           label = expression("K + 1: " ~ A[LOWER] == 0.5442)) +
+           label = expression("K + 1: " ~ A[Lower] == 0.5442)) +
   annotate("text",
            x     = 100,
            y     = 45,
            adj   = 0,
            col   = "grey20",
            parse = TRUE,
-           label = expression("K + 2: " ~ A[LOWER] == 0.0544)) +
+           label = expression("K + 2: " ~ A[Lower] == 0.0544)) +
   annotate("text",
            x     = 100,
            y     = 30,
            adj   = 0,
            col   = "grey0",
            parse = TRUE,
-           label = expression("K + 3: " ~ A[LOWER] == 0.0054)) +
-  scale_x_log10(breaks = c(preFit$P, 10000),
-                labels = c(preFit$P, 10000),
-                limits = c(0.1, 10000)) +
+           label = expression("K + 3: " ~ A[Lower] == 0.0054)) +
+  scale_x_log10(breaks = c(preFit$P),
+                labels = c(preFit$P),
+                limits = c(0.1, 5000)) +
   xlab("Unit Price") +
   ylab("Consumption") +
   theme_bw() +
@@ -350,8 +350,8 @@ EXPTrel = nls(Q ~ Q0 * 10^(kSet*(exp(-a * Q0 * P)-1)),
 preFit.trim$exptRelPred = predict(EXPTrel)
 
 preFit.trim = preFit.trim %>%
-  rename(`Exponential`   = explPred,
-         `Exponentiated (Absolute Error)` = exptPred,
+  rename(`Exponential`                    = explPred,
+         `Exponentiated`                  = exptPred,
          `Exponentiated (Relative Error)` = exptRelPred) 
 
 # kable(preFit.trim) %>%
@@ -522,8 +522,8 @@ In a demonstration of this modified @hursh2008economic approach, the full data s
 ggplot(subset(preFit.g, Model != "Exponential (Relative)"), aes(P, Q)) +
   geom_point(data = preFit.point.full) +
   geom_line(aes(P, Prediction), color = "grey40") +
-  scale_x_log10(breaks = c(0.1, 10, 100, 1000, 10000),
-                labels = c(0.1, 10, 100, 1000, 10000),
+  scale_x_log10(breaks = c(0.1, 1, 10, 100, 1000, 10000),
+                labels = c(0.1, 1, 10, 100, 1000, 10000),
                 limits = c(0.1, 10000)) +
   facet_wrap(~Model, ncol = 3) +
   xlab("Unit Price") +
@@ -795,7 +795,6 @@ cor.1v4.a = cor.test(frameToAnalyze$a.Koff,
 par(mfrow = c(1, 2),
     oma   = c(0, 0, 0, 0))
 
-comps.base <- lm(q0.Koff ~ q0.HSw, data = frameToAnalyze)
 plot(frameToAnalyze$q0.Koff ~ frameToAnalyze$q0.HSw,
      main = expression(Q[0] ~ "Estimates"),
      col  = alpha("black", 0.1),
@@ -804,11 +803,9 @@ plot(frameToAnalyze$q0.Koff ~ frameToAnalyze$q0.HSw,
      xlab = "Strategy 4",
      xlim = c(0,3),
      frame=FALSE)
-abline(comps.base)
 
 box(bty="l")
 
-comps.base <- lm(a.Koff ~ a.HSw, data = frameToAnalyze)
 plot(frameToAnalyze$a.Koff ~ frameToAnalyze$a.HSw,
      main = expression(alpha ~ "Estimates"),
      col  = alpha("black", 0.1),
@@ -817,7 +814,6 @@ plot(frameToAnalyze$a.Koff ~ frameToAnalyze$a.HSw,
      xlab = "Strategy 4",
      xlim = c(-5,0),
      frame=FALSE)
-abline(comps.base)
 
 box(bty="l")
 
@@ -852,7 +848,6 @@ cor.2v3.a = cor.test(frameToAnalyze$q0.Koffw,
 par(mfrow = c(1, 2),
     oma   = c(0, 0, 0, 0))
 
-#comps.base <- lm(q0.Koffw ~ q0.HS, data = frameToAnalyze)
 plot(frameToAnalyze$q0.Koffw ~ frameToAnalyze$q0.HS,
      main = expression(Q[0] ~ "Estimates"),
      col  = alpha("black", 0.1),
@@ -861,11 +856,9 @@ plot(frameToAnalyze$q0.Koffw ~ frameToAnalyze$q0.HS,
      xlab = "Strategy 3",
      xlim = c(0,3),
      frame=FALSE)
-#abline(comps.base)
 
 box(bty="l")
 
-#comps.base <- lm(a.Koffw ~ a.HS, data = frameToAnalyze)
 plot(frameToAnalyze$a.Koffw ~ frameToAnalyze$a.HS,
      main = expression(alpha ~ "Estimates"),
      col  = alpha("black", 0.1),
@@ -874,7 +867,6 @@ plot(frameToAnalyze$a.Koffw ~ frameToAnalyze$a.HS,
      xlab = "Strategy 3",
      xlim = c(-5,0),
      frame=FALSE)
-#abline(comps.base)
 
 box(bty="l")
 
