@@ -10,3 +10,4 @@ Model-Comparison-Paper_files/
 *.fff
 showFrac.R
 .DS_Store
+outputfile.csv
