@@ -3,7 +3,6 @@
 .RData
 .Ruserdata
 Older/
-Model-Comparison-Paper_files/
 *.tex
 *.log
 *.fff
