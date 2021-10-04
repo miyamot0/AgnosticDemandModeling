@@ -49,6 +49,7 @@ output            : papaja::apa6_pdf
 library(beezdemand)
 library(dplyr)
 library(ggplot2)
+library(ggpubr)
 library(gridExtra)
 library(kableExtra)
 library(knitr)
@@ -56,13 +57,14 @@ library(papaja)
 library(parameters)
 library(scales)
 library(tidyverse)
+library(tidyr)
 
 r_refs("r-references.bib")
 ```
 
 ```{r }
 # Seed for random number generation
-set.seed(42)
+set.seed(65535)
 knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
 ```
 
@@ -594,13 +596,32 @@ x <- c(.1, 1, 3, 10, 30, 100, 300, 1000)
 
 set.seed(65535)
 
-nParticipants = 1000
+nParticipants = 20000
 
-sim <- SimulateDemand(nruns = nParticipants, setparams = setparams, sdindex = sdindex, x = x)
+if (file.exists("sim-full.rds")) {
+  sim = readRDS("sim-full.rds")
+
+} else {
+  sim           = SimulateDemand(nruns     = nParticipants,
+                                 setparams = setparams,
+                                 sdindex   = sdindex,
+                                 x         = x)
+
+  saveRDS(sim, file = "sim-full.rds")
+}
 
 dataSet = sim$simvalues
 
-passingFrame = beezdemand::CheckUnsystematic(dataSet)
+if (file.exists("sim-full-passingFrame.rds")) {
+  passingFrame = readRDS("sim-full-passingFrame.rds")
+
+} else {
+  passingFrame  = beezdemand::CheckUnsystematic(dataSet,
+                                                ncons0    = 1,
+                                                reversals = 0)
+
+  saveRDS(passingFrame, "sim-full-passingFrame.rds")
+}
 
 kSet = log10(max(dataSet$y)) - log10(min(dataSet$y[dataSet$y > 0])) + 3
 
@@ -641,28 +662,12 @@ Pairwise comparisons were conducted for parameters $Q_0$ and $\alpha$ resulting 
 # Results
 
 ```{r coreAnalyses}
-
 keepers = passingFrame %>%
-  filter(TotalPass == 3 & NumPosValues > 0) %>%
-  select(id) %>%
-  pull()
+  dplyr::filter(TotalPass == 3 & NumPosValues > 5) %>%
+  dplyr::select(id) %>%
+  dplyr::pull()
 
 nPassing = length(keepers)
-
-dataFramePrep = data.frame(
-  id       = 1:nPassing,
-  q0.HS    = numeric(length = nPassing),
-  q0.HSw   = numeric(length = nPassing),
-  q0.HSw2  = numeric(length = nPassing),
-  q0.Koff  = numeric(length = nPassing),
-  q0.Koffw = numeric(length = nPassing),
-  a.HS     = numeric(length = nPassing),
-  a.HSw    = numeric(length = nPassing),
-  a.HSw2   = numeric(length = nPassing),
-  a.Koff   = numeric(length = nPassing),
-  a.Koffw  = numeric(length = nPassing),
-  K        = numeric(length = nPassing)
-)
 
 getEXPL <- function(Q, K, A, P) {
   log(Q)/log(10) + K * (exp(-A * Q * P) - 1)
@@ -672,8 +677,26 @@ getEXPT <- function(Q, K, A, P) {
   Q * 10^(K*(exp(-A * Q * P) - 1))
 }
 
+R2.EXPT <- function(data, par) {
+  RSS = with(data, sum((getEXPT(10^par[1], kSet, 10^par[2], x) - y)^2))
+
+  1.0 - (RSS/sum((data$y - mean(data$y))^2))
+}
+
 min.RSS.EXPT <- function(data, par) {
   with(data, sum((getEXPT(10^par[1], kSet, 10^par[2], x) - y)^2))
+}
+
+R2.EXPT.aw <- function(data, par) {
+  newData = data
+
+  newData$ys   = getEXPT(10^par[1], kSet, 10^par[2], newData$x)
+  newData$err  = (newData$y - newData$ys)/newData$ys
+  newData$err  = newData$err^2
+
+  RSS = sum(newData$err)
+
+  1.0 - (RSS/sum((newData$y - mean(newData$y))^2))
 }
 
 min.RSS.EXPT.aw <- function(data, par) {
@@ -686,6 +709,17 @@ min.RSS.EXPT.aw <- function(data, par) {
   sum(newData$err)
 }
 
+R2.EXPL <- function(data, par) {
+  newData = data
+  newAsymptote = 10^(log10(10^par[1]) - kSet)
+  newData[newData$y == 0, "y"] <- newAsymptote
+  newData$y <- log10(newData$y)
+
+  RSS = with(newData, sum((getEXPL(10^par[1], kSet, 10^par[2], x) - y)))
+
+  1.0 - (RSS/sum((newData$y - mean(newData$y))^2))
+}
+
 min.RSS.EXPL <- function(data, par) {
   newData = data
   newAsymptote = 10^(log10(10^par[1]) - kSet)
@@ -693,6 +727,20 @@ min.RSS.EXPL <- function(data, par) {
   newData$y <- log10(newData$y)
 
   with(newData, sum((getEXPL(10^par[1], kSet, 10^par[2], x) - y)^2))
+}
+
+R2.EXPL.aw <- function(data, par) {
+  newData = data
+  newAsymptote = 10^(log10(10^par[1]) - kSet)
+  newData[newData$y == 0, "y"] <- newAsymptote
+
+  newData$y    = log10(newData$y)
+  newData$ys   = getEXPL(10^par[1], kSet, 10^par[2], newData$x)
+  newData$err  = (10^newData$ys - 10^newData$y)^2
+
+  RSS = sum(newData$err)
+
+  1.0 - (RSS/sum((10^newData$y - mean(10^newData$y))^2))
 }
 
 min.RSS.EXPL.aw <- function(data, par) {
@@ -720,70 +768,145 @@ min.RSS.EXPL.aw2 <- function(data, par) {
   sum(newData$err)
 }
 
-#minQ0 = 0.01
-#maxQ0 = 200
+lowerBounds = c(0.5,
+                -6)
 
-for (id in 1:nPassing) {
+if (file.exists("sim-full-frameToAnalyze.rds")) {
+  frameToAnalyze = readRDS("sim-full-frameToAnalyze.rds")
 
-  currentData = dataSet[dataSet$id == keepers[id], ]
+} else {
+  dataFramePrep = data.frame(
+    id       = 1:nPassing,
+    tag      = numeric(length = nPassing),
+    q0.HS    = numeric(length = nPassing),
+    q0.HSw   = numeric(length = nPassing),
+    q0.Koff  = numeric(length = nPassing),
+    q0.Koffw = numeric(length = nPassing),
+    a.HS     = numeric(length = nPassing),
+    a.HSw    = numeric(length = nPassing),
+    a.Koff   = numeric(length = nPassing),
+    a.Koffw  = numeric(length = nPassing),
+    r2.HS    = numeric(length = nPassing),
+    r2.HSw   = numeric(length = nPassing),
+    r2.Koff  = numeric(length = nPassing),
+    r2.Koffw = numeric(length = nPassing),
+    K        = numeric(length = nPassing),
+    c.HS     = numeric(length = nPassing),
+    c.HSw    = numeric(length = nPassing),
+    c.Koff   = numeric(length = nPassing),
+    c.Koffw  = numeric(length = nPassing)
+  )
 
-  dataFramePrep[id, "K"] = kSet
+  for (id in 1:nPassing) {
 
-  # ==================================================
-  # Un-Weighted sets
-  # ==================================================
-  
-  fit.Koff <- optim(par  = c(log10(max(currentData$y)), -5),
-                    fn   = min.RSS.EXPT,
-                  method = "L-BFGS-B",
-                  lower  = c(-6, -6),
-                  upper  = c(log10(max(currentData$y) * 2), 0),
-                    data = currentData)
+    if (id %% 100 == 0) {
+      message(paste("Iteration #", id, "of", nPassing))
+    }
 
-  dataFramePrep[id, c("q0.Koff", "a.Koff")] = fit.Koff$par
-  
-  fit.HS   <- optim(par    = c(log10(max(currentData$y)), -5),
-                    fn     = min.RSS.EXPL,
-                    method = "L-BFGS-B",
-                    lower  = c(-6, -6),
-                    upper  = c(log10(max(currentData$y) * 3), 0),
-                    data   = currentData)
+    currentData              = dataSet[dataSet$id == as.numeric(keepers[id]), ]
+    dataFramePrep[id, "tag"] = keepers[id]
+    dataFramePrep[id, "K"]   = kSet
 
-  dataFramePrep[id, c("q0.HS", "a.HS")] = fit.HS$par
+    startQ = log10(max(currentData$y))
+    startA = -3
+    ctrlClass = list(
+      maxit = 1000
+    )
 
-  # ==================================================
-  # Weighted sets
-  # ==================================================
-  
-  fit.Koffa <- optim(par    = c(log10(max(currentData$y)), -5),
-                     fn     = min.RSS.EXPT.aw,
-                    method = "L-BFGS-B",
-                    lower  = c(-6, -6),
-                    upper  = c(log10(max(currentData$y) * 2), 0),
-                     data   = currentData)
+    methodSetting = "L-BFGS-B"
 
-  dataFramePrep[id, c("q0.Koffw", "a.Koffw")] = fit.Koffa$par
+    upperBounds = c(log10(max(currentData$y) * 2),
+                    -1)
 
-  fit.HWa <- optim(par    = c(log10(max(currentData$y)), -5),
-                   fn     = min.RSS.EXPL.aw,
-                  method = "L-BFGS-B",
-                  lower  = c(-6, -6),
-                  upper  = c(log10(max(currentData$y) * 2), 0),
-                   data   = currentData)
+    # ==================================================
+    # Un-Weighted sets
+    # ==================================================
 
-  dataFramePrep[id, c("q0.HSw", "a.HSw")] = fit.HWa$par
-  
-  fit.HWb <- optim(par    = c(log10(max(currentData$y)), -5),
-                   fn     = min.RSS.EXPL.aw2,
-                  method = "L-BFGS-B",
-                  lower  = c(-6, -6),
-                  upper  = c(log10(max(currentData$y) * 2), 0),
-                   data   = currentData)
+    fit.HS   <- optim(par    = c(startQ, startA),
+                      fn     = min.RSS.EXPL,
+                      method = methodSetting,
+                      lower  = lowerBounds,
+                      upper  = upperBounds,
+                      data   = currentData,
+                      control = ctrlClass)
 
-  dataFramePrep[id, c("q0.HSw2", "a.HSw2")] = fit.HWb$par
+    fit.Koff <- optim(par    = c(startQ, startA),
+                      fn     = min.RSS.EXPT,
+                      method = methodSetting,
+                      lower  = lowerBounds,
+                      upper  = upperBounds,
+                      data   = currentData,
+                      control = ctrlClass)
+
+    # ==================================================
+    # Weighted sets
+    # ==================================================
+
+    fit.Koffa <- optim(par    = c(startQ, startA),
+                       fn     = min.RSS.EXPT.aw,
+                       method = methodSetting,
+                       lower  = lowerBounds,
+                       upper  = upperBounds,
+                       data   = currentData,
+                       control = ctrlClass)
+
+    fit.HWa <- optim(par    = c(startQ, startA),
+                     fn     = min.RSS.EXPL.aw,
+                     method = methodSetting,
+                     lower  = lowerBounds,
+                     upper  = upperBounds,
+                     data   = currentData,
+                     control = ctrlClass)
+
+    if (length(unique(currentData$y[currentData$y > 0])) > 2) {
+      dataFramePrep[id, c("q0.HS", "a.HS")]       = fit.HS$par
+      dataFramePrep[id, "r2.HS"]                  = R2.EXPL(currentData, fit.HS$par)
+      dataFramePrep[id, "c.HS"]                   = fit.HS$convergence
+
+      dataFramePrep[id, c("q0.Koffw", "a.Koffw")] = fit.Koffa$par
+      dataFramePrep[id, "r2.Koffw"]               = R2.EXPT.aw(currentData, fit.Koffa$par)
+      dataFramePrep[id, "c.Koffw"]                = fit.Koffa$convergence
+
+      dataFramePrep[id, c("q0.HSw", "a.HSw")]     = fit.HWa$par
+      dataFramePrep[id, "r2.HSw"]                 = R2.EXPL.aw(currentData, fit.HWa$par)
+      dataFramePrep[id, "c.HSw"]                  = fit.HWa$convergence
+
+      dataFramePrep[id, c("q0.Koff", "a.Koff")]   = fit.Koff$par
+      dataFramePrep[id, "r2.Koff"]                = R2.EXPT(currentData, fit.Koff$par)
+      dataFramePrep[id, "c.Koff"]                 = fit.Koff$convergence
+    } else {
+      dataFramePrep[id, c("q0.HS", "a.HS")]       = NA
+      dataFramePrep[id, "r2.HS"]                  = NA
+      dataFramePrep[id, "c.HS"]                   = NA
+
+      dataFramePrep[id, c("q0.Koffw", "a.Koffw")] = NA
+      dataFramePrep[id, "r2.Koffw"]               = NA
+      dataFramePrep[id, "c.Koffw"]                = NA
+
+      dataFramePrep[id, c("q0.HSw", "a.HSw")]     = NA
+      dataFramePrep[id, "r2.HSw"]                 = NA
+      dataFramePrep[id, "c.HSw"]                  = NA
+
+      dataFramePrep[id, c("q0.Koff", "a.Koff")]   = NA
+      dataFramePrep[id, "r2.Koff"]                = NA
+      dataFramePrep[id, "c.Koff"]                 = NA
+    }
+  }
+
+  frameToAnalyze = dataFramePrep
+
+  # Filter out poor convergence
+  frameToAnalyze = frameToAnalyze %>%
+    mutate(ConvergenceSum = c.HS + c.Koffw + c.HSw  + c.Koff) %>%
+    filter(ConvergenceSum == 0)
+
+  frameToAnalyze = frameToAnalyze %>%
+    mutate(FitSum = r2.HS + r2.Koffw + r2.HSw  + r2.Koff) %>%
+    arrange(-FitSum) %>%
+    dplyr::top_n(1000)
+
+  saveRDS(frameToAnalyze, "sim-full-frameToAnalyze.rds")
 }
-
-frameToAnalyze = dataFramePrep
 
 ```
 
@@ -795,19 +918,23 @@ The data generating process was used to produce a total of `r nParticipants` dis
 
 library(equivalence)
 
+t.1v4.q0 = t.test(frameToAnalyze$q0.Koff, frameToAnalyze$q0.HSw)
+
 tost.1v4.q0 = tost(frameToAnalyze$q0.Koff, 
-                   frameToAnalyze$q0.HSw, 
-                   epsilon = 1, 
-                   conf.level = 0.9875,
+                   frameToAnalyze$q0.HSw,  
+                   epsilon = 0.01, 
+                   conf.level = 0.975,
                    paired = TRUE)
 
 cor.1v4.q0 = cor.test(frameToAnalyze$q0.Koff, 
                       frameToAnalyze$q0.HSw)
 
+t.1v4.a = t.test(frameToAnalyze$a.Koff, frameToAnalyze$a.HSw)
+
 tost.1v4.a = tost(frameToAnalyze$a.Koff, 
                   frameToAnalyze$a.HSw, 
-                  epsilon = 1, 
-                  conf.level = 0.9875,
+                  epsilon = 0.01, 
+                  conf.level = 0.975,
                   paired = TRUE)
 
 cor.1v4.a = cor.test(frameToAnalyze$a.Koff, 
@@ -817,110 +944,111 @@ par(mfrow = c(1, 2),
     oma   = c(0, 0, 0, 0))
 
 plot(frameToAnalyze$q0.Koff ~ frameToAnalyze$q0.HSw,
-     main = expression(Q[0] ~ "Estimates"),
-     col  = alpha("black", 0.1),
-     ylab = "Strategy 1",
-     ylim = c(0,3),
-     xlab = "Strategy 4",
-     xlim = c(0,3),
-     frame=FALSE)
+     main  = expression(Q[0] ~ "Estimates"),
+     col   = alpha("black", 0.4),
+     ylab  = "Strategy 1",
+     xlab  = "Strategy 4",
+     xaxt  = "n",
+     xlim  = c(0, 3),
+     yaxt  = "n",
+     ylim  = c(0, 3),
+     frame = FALSE)
 
-box(bty="l")
+axis(1, at = seq(0, 3, 1))
+axis(2, at = seq(0, 3, 1))
+
+box(bty = "l")
 
 plot(frameToAnalyze$a.Koff ~ frameToAnalyze$a.HSw,
-     main = expression(alpha ~ "Estimates"),
-     col  = alpha("black", 0.1),
-     ylab = "Strategy 1",
-     ylim = c(-5,0),
-     xlab = "Strategy 4",
-     xlim = c(-5,0),
-     frame=FALSE)
+     main  = expression(alpha ~ "Estimates"),
+     col   = alpha("black", 0.4),
+     ylab  = "Strategy 1",
+     xlab  = "Strategy 4",
+     xaxt = "n",
+     xlim  = c(-6, -2),
+     yaxt = "n",
+     ylim  = c(-6, -2),
+     frame = FALSE)
 
-box(bty="l")
+axis(1, at = seq(-6, -2, 1))
+axis(2, at = seq(-6, -2, 1))
+
+box(bty = "l")
 
 ```
 
 The primary comparison of interest in this report was between Strategy 1 and Strategy 4 This comparison evaluated the correspondence between the @hursh2008 and @koff2015expt models when error differences were represented in terms of absolute difference and when non-consumption was treated as $A_{Lower}$ for the @hursh2008 model. Given the shared mathematical basis for each, the estimates resulting from each were expected to be equivalent.
 
-An evaluation of the relationship between Strategy 1 and 4 revealed perfect correlations for both $Q_0$ (r=`r cor.1v4.q0$estimate`, t=`r cor.1v4.q0$statistic`, df=`r cor.1v4.q0$parameter`, `r scales::pvalue(cor.1v4.q0$p.value, accuracy = .025, add_p = TRUE)`) and for $\alpha$ (r=`r cor.1v4.a$estimate`, t=`r cor.1v4.a$statistic`, df=`r cor.1v4.a$parameter`, `r scales::pvalue(cor.1v4.a$p.value, accuracy = .025, add_p = TRUE)`). That is, a perfect rank ordering was observed across strategies and across parameters. T-test comparisons were non-significant for $Q_0$ (t=6.9e-07, df=1,998, p=1) and for $\alpha$ (t=4.4e-06, df= 1,998, p=1).
-
-Subsequent TOSTs were significant for $Q_0$ (p=0) and $\alpha$ (p=0). Specifically, results of equivalence testing rejected the null hypothesis of statistical difference for both parameters and this indicated that estimates resulting from each strategy were statistically equivalent. A visualization of these corresponding estimates is illustrated in \autoref{fig:s1vs4fig}.
-
--------
-
-Comparisons between Strategy 1 and Strategy 4 evaluated the correspondence between the @hursh2008 and @koff2015expt models when error differences were interpreted in terms of absolute difference and when non-consumption was treated as $A_{Lower}$ for the @hursh2008 model.
-
-Two one-sided T-tests (TOSTs) were calculated to determine whether the results of each strategy were statistically equivalent. The results of TOSTs were significant for $Q_0$ (`r scales::pvalue(tost.1v4.q0$tost.p.value, accuracy = .025, add_p = TRUE)`) and for $\alpha$ (`r scales::pvalue(tost.1v4.a$tost.p.value, accuracy = .025, add_p = TRUE)`). Results of equivalence testing rejected the null hypothesis of statistical difference for both parameters and this indicated that estimates resulting from each strategy were statistically equivalent. A visualization of these corresponding estimates are illustrated in \autoref{fig:s1vs4fig}.
+An evaluation of the relationship between Strategy 1 and 4 revealed perfect correlations for both $Q_0$ (r=`r cor.1v4.q0$estimate`, t=`r cor.1v4.q0$statistic`, df=`r cor.1v4.q0$parameter`, `r scales::pvalue(cor.1v4.q0$p.value, accuracy = .025, add_p = TRUE)`) and for $\alpha$ (r=`r cor.1v4.a$estimate`, t=`r cor.1v4.a$statistic`, df=`r cor.1v4.a$parameter`, `r scales::pvalue(cor.1v4.a$p.value, accuracy = .025, add_p = TRUE)`). That is, a perfect rank ordering was observed across strategies and across parameters. T-test comparisons were non-significant for $Q_0$ (t=`r t.1v4.q0$statistic`, df=`r t.1v4.q0$parameter`, `r scales::pvalue(t.1v4.q0$p.value, accuracy = .025, add_p = TRUE)`) and for $\alpha$ (t=`r t.1v4.a$statistic`, df=`r t.1v4.a$parameter`, `r scales::pvalue(t.1v4.a$p.value, accuracy = .025, add_p = TRUE)`). Subsequent TOSTs were significant for $Q_0$ (`r scales::pvalue(tost.1v4.q0$tost.p.value, accuracy = .025, add_p = TRUE)`) and for $\alpha$ (`r scales::pvalue(tost.1v4.a$tost.p.value, accuracy = .025, add_p = TRUE)`). Specifically, results of equivalence testing rejected the null hypothesis of statistical difference for both parameters and this indicated that estimates resulting from each strategy were statistically equivalent. A visualization of these corresponding estimates is illustrated in \autoref{fig:s1vs4fig}.
 
 ## Strategy 2 vs. Strategy 3 (Relative Error)
 
 ```{r s2vs3fig, fig.cap="Comparisons of Strategy 2 and 3 (Relative Error)", fig.height=4}
 
-tost.2v3.q0 = tost(frameToAnalyze$q0.Koffw, 
-                   frameToAnalyze$q0.HS, 
-                   epsilon = 1, 
-                   conf.level = 0.9875,
-                   paired = TRUE)
+t.2v3.q0 = t.test(frameToAnalyze$q0.Koffw, frameToAnalyze$q0.HS)
 
 cor.2v3.q0 = cor.test(frameToAnalyze$q0.Koffw, 
                       frameToAnalyze$q0.HS)
 
-tost.2v3.a = tost(frameToAnalyze$a.Koffw, 
-                  frameToAnalyze$a.HS, 
-                  epsilon = 1, 
-                  conf.level = 0.9875,
-                  paired = TRUE)
+t.2v3.a = t.test(frameToAnalyze$a.Koffw, frameToAnalyze$a.HS)
 
-cor.2v3.a = cor.test(frameToAnalyze$q0.Koffw, 
-                     frameToAnalyze$q0.HS)
+cor.2v3.a = cor.test(frameToAnalyze$a.Koffw, 
+                     frameToAnalyze$a.HS)
 
 par(mfrow = c(1, 2),
     oma   = c(0, 0, 0, 0))
 
 plot(frameToAnalyze$q0.Koffw ~ frameToAnalyze$q0.HS,
-     main = expression(Q[0] ~ "Estimates"),
-     col  = alpha("black", 0.1),
-     ylab = "Strategy 2",
-     ylim = c(0,3),
-     xlab = "Strategy 3",
-     xlim = c(0,3),
-     frame=FALSE)
+     main  = expression(Q[0] ~ "Estimates"),
+     col   = alpha("black", 0.4),
+     ylab  = "Strategy 2",
+     xlab  = "Strategy 3",
+     xaxt  = "n",
+     xlim  = c(0, 3),
+     yaxt  = "n",
+     ylim  = c(0, 3),
+     frame = FALSE)
 
-box(bty="l")
+axis(1, at = seq(0, 3, 1))
+axis(2, at = seq(0, 3, 1))
+
+box(bty = "l")
 
 plot(frameToAnalyze$a.Koffw ~ frameToAnalyze$a.HS,
-     main = expression(alpha ~ "Estimates"),
-     col  = alpha("black", 0.1),
-     ylab = "Strategy 2",
-     ylim = c(-5,0),
-     xlab = "Strategy 3",
-     xlim = c(-5,0),
-     frame=FALSE)
+     main  = expression(alpha ~ "Estimates"),
+     col   = alpha("black", 0.4),
+     ylab  = "Strategy 2",
+     xlab  = "Strategy 3",
+     xaxt = "n",
+     xlim  = c(-6, -2),
+     yaxt = "n",
+     ylim  = c(-6, -2),
+     frame = FALSE)
 
-box(bty="l")
+axis(1, at = seq(-6, -2, 1))
+axis(2, at = seq(-6, -2, 1))
 
+box(bty = "l")
 
 ```
 
-Comparisons between Strategy 2 and Strategy 3 evaluated the correspondence between the @hursh2008 and @koff2015expt models when error differences were interpreted in terms of relative difference and when non-consumption was treated as $A_{Lower}$ for the @hursh2008 model. Specifically, the @hursh2008 model evaluated error using log difference and the @koff2015expt model evaluated error using percentage difference. An evaluation of the relationship between Strategy 2 and Strategy 3 revealed strong, but not perfect correlations for $Q_0$ (r=`r cor.2v3.q0$estimate`, t=`r cor.2v3.q0$statistic`, df=`r cor.2v3.q0$parameter`, `r scales::pvalue(cor.2v3.q0$p.value, accuracy = .025, add_p = TRUE)`) and for $\alpha$ (r=`r cor.2v3.a$estimate`, t=`r cor.2v3.a$statistic`, df=`r cor.2v3.a$parameter`, `r scales::pvalue(cor.2v3.a$p.value, accuracy = .025, add_p = TRUE)`). That is, parameter values were highly correlated but the varying approaches to determining relative difference introduced an unmeasured degree of noise into the optimization of individual parameters.
+The secondary comparison of interest in this report was between Strategy 2 and Strategy 3. Comparisons between Strategy 2 and Strategy 3 evaluated the correspondence between the @hursh2008 and @koff2015expt models when error differences were interpreted in terms of relative difference and when non-consumption was treated as $A_{Lower}$ for the @hursh2008 model. Specifically, the @hursh2008 model evaluated error using log difference and the @koff2015expt model evaluated error using percentage difference. Given the varying methods of representing residual error as relative, the estimates resulting from each were not expected to be equivalent.
 
-Results of TOSTs were significant for $Q_0$ (`r scales::pvalue(tost.2v3.q0$tost.p.value, accuracy = .025, add_p = TRUE)`) as well as for $\alpha$ (`r scales::pvalue(tost.2v3.a$tost.p.value, accuracy = .025, add_p = TRUE)`). These results indicated that both strategies yielded statistically equivalent model parameters for both $Q_0$ and $\alpha$. A visualization of these relationships are illustrated in \autoref{fig:s2vs3fig}.
+An evaluation of the relationship between Strategy 2 and Strategy 3 revealed strong, but not perfect correlations for $Q_0$ (r=`r cor.2v3.q0$estimate`, t=`r cor.2v3.q0$statistic`, df=`r cor.2v3.q0$parameter`, `r scales::pvalue(cor.2v3.q0$p.value, accuracy = .025, add_p = TRUE)`) and for $\alpha$ (r=`r cor.2v3.a$estimate`, t=`r cor.2v3.a$statistic`, df=`r cor.2v3.a$parameter`, `r scales::pvalue(cor.2v3.a$p.value, accuracy = .025, add_p = TRUE)`). T-test comparisons were significant for $Q_0$ (t=`r t.2v3.q0$statistic`, df=`r t.2v3.q0$parameter`, `r scales::pvalue(t.2v3.q0$p.value, accuracy = .025, add_p = TRUE)`) as well as for $\alpha$ (t=`r t.2v3.a$statistic`, df=`r t.2v3.a$parameter`, `r scales::pvalue(t.2v3.a$p.value, accuracy = .025, add_p = TRUE)`). No TOSTs were performed given that t-tests indicated significant differences between estimates resulting from each strategy. A visualization of these relationships are illustrated in \autoref{fig:s2vs3fig}.
 
 # Discussion
 
-The Operant Demand Framework has achieved high regard as a robust approach for evaluating choices and behavior of societal significance [@hursh2013behavioral; @reed2013behavioral]. Various labs and teams have been working towards expanding the scale and scope of this approach, moving from questions specific to individuals and groups to society at-large [@hursh2013behavioral; @roma2017progress]. This approach and its methods are increasingly represented in a range of scientific tools and packages as well [@kaplan2019r; @gilroy2018demand]. Despite increasing popularity and accessibility, there are few guidelines with which to assist analysts in navigating between options for demand curve analyses. The purpose of this technical report was to review the mathematical underpinnings of the two prevailing models derived from the framework of @hursh2008 and present an argument as to why distinctions between these statistically equivalent approaches create more confusion than consensus.
+This report provided an in-depth review of how non-consumption values (i.e., 0) have, thus far, been incorporated in models derived from the @hursh2008 framework. As noted throughout this report, both the @hursh2008 and the @koff2015expt approaches are unable to model demand at 0 and both are bounded by the non-zero lower asymptote, $A_{Lower}$. This is the case regardless of whether non-consumption values are included in the regression. As such, the approach put forward in @koff2015expt is not a complete solution for non-consumption values because the same limitations of the original approach remain in this regard. This is because the span of the demand curve in the @hursh2008 framework remains in the log scale, despite LHS exponentiation, and the span in log scale cannot support 0. As an alternative to this issue with span, others have argued that a true solution to this issue would require deviating from the log scale altogether [@gilroy2021].
 
-This report provided an in-depth discussion and review of how non-consumption values (i.e., 0) have, thus far, been incorporated into models derived from the @hursh2008 framework. As noted throughout this report, both the @hursh2008 and the @koff2015expt approach are unable to model demand at 0 and both are restricted to a non-zero lower asymptote, $A_{Lower}$. This is the case regardless of whether non-consumption values are included in the regression. As such, the approach put forward in @koff2015expt is not a complete solution for non-consumption values because the same limitations of the original approach remain in this regard. This is because the span of the demand curve in the @hursh2008 framework remains in the log scale, despite LHS exponentiation, and the span in log scale cannot support 0. As an alternative to this issue with span, others have argued that a true solution to this issue would require deviating from the log scale altogether [@gilroy2021].
+The proofs and simulations featured in this study facilitated comparisons between the @hursh2008 and @koff2015expt models when controlling for the common $A_{Lower}$ and differences in how residual errors are interpreted during optimization. The goal of these comparisons was to advance the argument that the Exponential [@hursh2008] and Exponentiated [@koff2015expt] models should not be so strongly distinguished. Indeed, it is quite trivial to arrive at statistically equivalent estimates in both approaches when the role of the span constant and $A_{Lower}$ and the method of representing residual error are held perfectly constant. The results of planned comparisons confirmed that the two models provide statistically equivalent estimates when controlling for such differences perfectly---even when non-consumption values are included. However, this is not the case when different methods of addressing residual error are used. That is, similar methods for representing relative differences are closely correlated but not statistically equivalent. This difference is mostly due to how percentage and log difference diverge as differences grow larger (see Appendix).
 
-The proofs and simulations featured in this study facilitated comparisons between the @hursh2008 and @koff2015expt models when controlling for the common $A_{Lower}$ and differences in how residual errors are interpreted during optimization. The goals of these comparisons were to advance the argument that the Exponential [@hursh2008] and Exponentiated [@koff2015expt] models should not be so strongly distinguished. Indeed, it is quite trivial to arrive at statistically equivalent estimates in both approaches when the role of the span constant and $A_{Lower}$ are understood as they relate to non-consumption values. The results of planned comparisons confirmed that the two approaches provide statistically equivalent estimates when controlling for such differences---even when non-consumption values are included. This is because the behavior of $A_{Lower}$ is identical regardless of which approach is used. However, it warrants noting that the two models are perfectly correlated with absolute error but just strongly correlated for relative error. This is because percentage and log differences are virtually identical at small differences (e.g., 1%) but diverge as differences grow larger. As such, differences here are unrelated to the models and how relative is interpreted in each approach.
+Given that neither approach can characterize demand at 0, $A_{Lower}$ is the *best* approximation of 0 possible for models derived from the @hursh2008 framework. Following this logic, replacing non-consumption values with respective $A_{Lower}$ values often result in the Exponential model providing estimates that are at least highly correlated with (potentially statistically equivalent to) the Exponentiated model. In advancing this argument, it is necessary to state clearly that this claim is not presented with the intent of favoring any specific approach as a de facto standard or a recommended default when applying methods from the Operant Demand Framework. Rather, this work intended to reveal how these supposedly opposing strategies are functionally interchangeable under specific conditions. Indeed, they are so similar that distinguishing the two only serves to obscure the many shared mathematical bases of each. That said, each approach has common utility and future efforts should be directed towards improving the understanding of the properties of the @hursh2008 framework overall rather than reinforcing any stance, position, or bias towards a specific implementation.
 
-Given that neither approach can characterize demand at 0, $A_{Lower}$ is the *best* approximation of 0 possible in the @hursh2008 framework. Following this logic, replacing non-consumption values with respective $A_{Lower}$ values results in estimates that are statistically equivalent across the Exponential and Exponentiated models. In advancing this argument, it necessary to state clearly that this claim is not presented with the intent of favoring any specific approach as a de facto standard or a recommended default when applying methods from the Operant Demand Framework. Rather, the intent of this work was to reveal how these supposedly opposing strategies are functionally equivocal. Indeed, they are so similar that distinguishing the two only serves to obscure the shared mathematical bases for each. That said, each approach has common utility and future efforts should be directed towards improving the understanding the properties of the @hursh2008 framework overall rather than reinforcing any stance, position, or bias towards a specific implementation.
-
-The final aim of this work was to reiterate the ways in which the proponents of each approach have extended the Operant Demand Framework. That is, the proponents of each approach were successful in advancing both the utility and scope of the Operant Demand Framework. For example, the finding that the @hursh2008 model can replicate the behavior of the @koff2015expt without exponentiation terms in no way detracts from the contributions of the @koff2015expt implementation of the framework. Indeed, the initiative of the @koff2015expt team warrants considerable praise even today because this led the charge towards addressing the problematic issue of removing otherwise valid research data. For decades, substantial portions of otherwise consumption data were never carried forward into analyses and it is unclear how these prior analyses would compare had these data been included. Regardless of whether analysts have a preference for one approach or the other, it is clear that the methods featured in Operant Demand Framework are better equipped now that non-consumption values can now be considered in the analysis.
+The final aim of this work was to reiterate the ways in which the proponents of each approach have extended the Operant Demand Framework. That is, the proponents of each approach were successful in advancing both the utility and scope of the Operant Demand Framework. For example, the finding that the @hursh2008 model can replicate the behavior of the @koff2015expt without exponentiation terms in no way detracts from the contributions of the @koff2015expt implementation of the framework. Indeed, the @koff2015expt team led the charge towards addressing the problematic issue of removing otherwise valid research data. For decades, substantial portions of otherwise valid consumption data were never carried forward into analyses and it is unclear how these prior analyses would compare had these data been included. Regardless of whether analysts have an established preference for one approach or another, it is clear that the methods included in Operant Demand Framework are better equipped now that non-consumption values can now be considered in the analysis.
 
 ## Future Directions in Operant Demand
 
-The future is bright for the Operant Demand Framework. This perspective and this framework currently reflects a range of consumption (and non-consumption) and efforts are underway to leverage multilevel modeling as a future methodological extension [@kaplanMlm]. Indeed, various labs are working toward increasing the applicability and generality of this approach. Towards this end, the intent and mission of the original @koff2015expt study regarding non-consumption values is as valid and valuable today as it was when this work was first published. However, debates regarding model superiority (or inferiority) in the absence of formal tests and mathematical proofing does not enhance the Operant Demand Framework in any appreciable manner. That said, the two approaches are functionally interchangeable (even in the presence of non-consumption) and the reader is cautioned against thinking that any single model is inherently "true", "better", or otherwise superior in the absence of careful and individualized statistical evaluation. That said, it is unclear whether the prevailing approach in the Operant Demand Framework will remain based on the framework presented in @hursh2008 well into the future. Indeed, it is possible that future research could explore to deviations from the log scale [@gilroy2021] or adopt a different framework altogether [@newman2020improved]. Regardless of the where the future takes the Operant Demand Framework, future approaches and advances should be met with cautious optimism and consideration rather than disregard in favor for what is preferred or familiar.
+This perspective and this framework currently reflect a range of consumption (and non-consumption) and efforts are underway to leverage multilevel modeling as a methodological extension [@kaplanMlm]. Indeed, various labs are working toward increasing the applicability and generality of this approach. Towards this end, the intent and mission of the original @koff2015expt study regarding non-consumption values is as valid and valuable today as it was when this work was first published. However, debates and conjecture regarding model superiority (or inferiority) in the absence of formal tests and mathematical proofing do not enhance the Operant Demand Framework in any appreciable manner. That said, the two approaches are functionally interchangeable (even in the presence of non-consumption) and the reader is cautioned against thinking that any single model is inherently "true," "better," or otherwise superior in the absence of careful and individualized statistical evaluation. That said, it is unclear whether the prevailing approach in the Operant Demand Framework will remain based on the framework presented in @hursh2008 well into the future. Indeed, it is possible that future research could explore to deviations from the log scale [@gilroy2021] or adopt a different framework altogether [@newman2020improved]. Regardless of the where the future takes the Operant Demand Framework, future approaches and advances should be met with cautious optimism and consideration rather than disregard in favor for what is preferred or familiar.
 
 \newpage
 
@@ -1101,4 +1229,3 @@ $$
 -0.5                   & \approx -1
 \end{aligned}
 $$ Note: The examples provided above illustrate how log difference $(-0.1053)$ and percentage difference $(-0.1)$ are quite close for small differences. However, the difference between log difference $(-0.6931)$ and percentage difference $(-0.5)$ begins to differ considerably with larger changes. As such, the two approaches to reflecting relative differences are unlikely to be perfectly related outside of optimal conditions.
-
