@@ -5,7 +5,6 @@
 Older/
 Model-Comparison-Paper_files/
 *.tex
-*.pdf
 *.log
 *.fff
 showFrac.R
